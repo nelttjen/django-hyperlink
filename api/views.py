@@ -9,24 +9,24 @@ from .serializers import RegisterSerializer
 
 
 class RegisterView(APIView):
-    permission_classes = ()
+	permission_classes = ()
 
-    def post(self, request: Request):
-        if request.data.get('password') != request.data.get('password2'):
-            return Response({'message': 'password not equal', 'show_message': 'Пароли не совпадают.'}, status=400)
+	def post(self, request: Request):
+		if request.data.get('password') != request.data.get('password2'):
+			return Response({'message': 'password not equal', 'show_message': 'Пароли не совпадают.'}, status=400)
 
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            create = serializer.create(serializer.validated_data)
-            if create == 'username':
-                return Response({'message': 'username taken', 'show_message': ''})
+		serializer = RegisterSerializer(data=request.data)
+		if serializer.is_valid():
+			create = serializer.create(serializer.validated_data)
+			if create == 'username':
+				return Response({'message': 'username taken', 'show_message': ''})
 
 
 
 
 
 class TestView(APIView):
-    permission_classes = (IsAuthenticated, )
+	permission_classes = (IsAuthenticated, )
 
-    def get(self, request):
-        return Response({'status': 'ok'})
+	def get(self, request):
+		return Response({'status': 'ok'})
