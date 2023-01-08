@@ -15,9 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django_hyperlink.settings import API_PATH, API_FOLDER
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('api.urls')),
-    path('', include('link.urls')),
+	path('admin/', admin.site.urls),
+	path('', include('link.urls')),
+
+	path(API_PATH, include(API_FOLDER))
 ]
