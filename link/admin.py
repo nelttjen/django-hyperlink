@@ -5,7 +5,7 @@ from .models import ShareLink
 
 # Register your models here.
 class ShareLinkAdmin(admin.ModelAdmin):
-    pass
+	pass
 
 
 admin.site.register(ShareLink, ShareLinkAdmin)
