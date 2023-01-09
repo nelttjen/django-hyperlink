@@ -45,7 +45,12 @@ ROOT_URLCONF = 'django_hyperlink.urls'
 TEMPLATES = [
 	{
 		'BACKEND': 'django.template.backends.django.DjangoTemplates',
-		'DIRS': [],
+		'DIRS': [
+			BASE_DIR / 'link/templates',
+			BASE_DIR / 'users/templates',
+
+			BASE_DIR / 'templates',
+		],
 		'APP_DIRS': True,
 		'OPTIONS': {
 			'context_processors': [
@@ -107,6 +112,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+	BASE_DIR / 'link/static',
+	BASE_DIR / 'users/static',
+	BASE_DIR / 'static'
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -116,9 +126,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # DOMAIN
 DOMAIN = 'http://127.0.0.1:8000'
 
+# api
 API_PATH = 'api/v1/'
 API_FOLDER = 'api.v1.urls'
 
+# celery
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = 6379
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_ACCEPT_CONTENT = ['application/json', ]
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# EMAIL
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+
+# REST
 REST_FRAMEWORK = {
 	'DEFAULT_AUTHENTICATION_CLASSES': [
 		'rest_framework.authentication.TokenAuthentication',

@@ -18,6 +18,8 @@ from django.urls import path, include
 from django_hyperlink.settings import API_PATH, API_FOLDER
 
 urlpatterns = [
+	path('users/', include('users.urls')),
+
 	path('admin/', admin.site.urls),
 	path('', include('link.urls')),
 

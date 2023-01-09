@@ -17,11 +17,11 @@ def send_activation_code(user_id):
 	email = user.email
 	user.save()
 	if not (code := ActivateCode.objects.filter(user=user, is_used=False, expired_date__gte=timezone.now()).first()):
-		code = ActivateCode(user=user).generate_code()
+		code = ActivateCode(user=user, type=1).generate_code()
 	send_mail(
 		subject='Завершение регистрации',
-		message=f'Здравствуйте! Ваша ссылка для регистрации аккаунта: {DOMAIN}/users/activate?code={code.code}. '
-		        f'Ссылка действительна в течении {ActivateCode.expired_min} минут.',
+		message=f'Здравствуйте! Ваша ссылка для регистрации аккаунта: {DOMAIN}/users/activate/?code={code.code}. '
+		        f'Ссылка действительна в течении {ActivateCode.expired_min} минут. Код для активации: {code.code}',
 		from_email=EMAIL_HOST_USER,
 		recipient_list=[email, ],
 		fail_silently=not DEBUG

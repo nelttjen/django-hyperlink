@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block head %}
+    <script src="{% static "users/js/activate.js" %}"></script>
+{% endblock %}
+{% block container %}
+    <label for="code_input">Код активации</label>
+    <input type="text" placeholder="Код активации" class="form-control" value="{{ code }}" id="code_input">
+    <button class="btn btn-primary" id="submit_btn">Отправить</button>
+    <div class="status" style="color: red"></div>
+{% endblock %}
