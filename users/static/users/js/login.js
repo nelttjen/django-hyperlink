@@ -14,15 +14,17 @@ function on_sublit_login(sender) {
                 "username": nick,
                 "password": pass,
             },
-            dataType: "application/json",
-            success: function (response) {
-                console.log(response);
-                console.log(CSRF);
-            },
-            error: function (response) {
-                console.log(response);
-            }
+        })
+        .done((response) => {
+            response = get_response(response);
+            setCookie("Token", response.token, 365);
+            $(".done-msg").text("Авторизация успешна");
+        })
+        .fail((response) => {
+            response = get_response(response);
+            $(".errors").text(response.msg);
         });
+
 }
 
 

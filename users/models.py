@@ -7,9 +7,21 @@ from django.contrib.auth.models import User as DjangoUser
 from django.utils import timezone
 
 
+def user_ban_json():
+	return User.ban_json
+
+
 # Create your models here.
 class User(models.Model):
+	ban_json = {
+		'is_banned': False,
+		'ban_until': None,
+		'ban_message': None,
+	}
+
 	user = models.OneToOneField(verbose_name='Джанго юзер', to=DjangoUser, on_delete=models.CASCADE)
+
+	ban = models.JSONField(verbose_name='Информация о бане', default=user_ban_json)
 
 	class Meta:
 		verbose_name = 'Пользователь'

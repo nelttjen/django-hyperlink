@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block head %}
+    <script src="{% static "users/js/test.js" %}"></script>
+{% endblock %}
+{% block container %}
+    <label for="test-input">test</label>
+    <input type="text" id="test-input" placeholder="test">
+    <button class="btn btn-primary" id="submit-btn">Отправить</button>
+{% endblock %}

@@ -6,19 +6,14 @@ function on_submit(sender) {
         data: {"code": value},
     })
     .done((response) => {
-        let raw = response;
-        try {
-            response = $.parseJSON(response.responseText);
-        } catch {
-            response = raw;
-        }
+        response = get_response(response);
         
         let link = response.content.redirect;
         let text = response.content.redirect_msg;
         window.location.replace(link + `?message=${text}`);
     })
     .fail((response) => {
-        response = $.parseJSON(response.responseText);
+        response = get_response(response);
         $('.status').text(response.msg);
     });
 }

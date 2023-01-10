@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from users.models import ActivateCode
-from users.tasks.register import send_activation_code
+from users.tasks.user_code import send_activation_code
 from users.tasks.activate import activate_user
 
 

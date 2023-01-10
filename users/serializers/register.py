@@ -10,8 +10,8 @@ from rest_framework.serializers import ModelSerializer, ValidationError
 from django_hyperlink.public_settings import DOMAIN
 from django_hyperlink.settings import EMAIL_HOST_USER
 from users.models import ActivateCode
-from users.tasks.register import send_activation_code
-
+from users.tasks.user_code import send_activation_code
+from users.modules import Email
 
 class RegisterSerializer(ModelSerializer):
 	class Meta:
@@ -59,5 +59,5 @@ class RegisterSerializer(ModelSerializer):
 		)
 		user.is_active = False
 		user.save()
-		send_activation_code.delay(user_id=user.id)
+		Email(user.id).send_activation_mail()
 		return user
