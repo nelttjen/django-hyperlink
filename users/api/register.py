@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import ParseError
 from rest_framework import permissions
 
+from django_hyperlink.public_settings import DOMAIN
 from users.serializers.register import RegisterSerializer
 from django_hyperlink.serializers.default import DefaultSerializer
 
@@ -18,6 +19,7 @@ class RegisterView(APIView):
 		serializer.create(serializer.validated_data)
 		return Response(DefaultSerializer({
 			'msg': 'Регистрация успешна! На ваш Email была отправлена ссылка для активации аккаунта',
-			'content': serializer.data
+			'content': serializer.data,
+			'entra': {'link': f'{DOMAIN}/users/activate/'}
 		}).data)
 
