@@ -148,7 +148,7 @@ EMAIL_PORT = 587
 # REST
 REST_FRAMEWORK = {
 	'DEFAULT_AUTHENTICATION_CLASSES': [
-		'rest_framework.authentication.TokenAuthentication',
+		'django_hyperlink.authentication.CustomTokenAuth',
 	],
 	'EXCEPTION_HANDLER': 'django_hyperlink.exceptions.custom_exception_handler',
 }

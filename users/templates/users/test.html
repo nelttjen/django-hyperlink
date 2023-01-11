@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load my_tags %}
+{% block head %}
+    <script src="{% static "users/js/test.js" %}?reload={% random_int 1 999999 %}"></script>
+{% endblock %}
+{% block container %}
+    <label for="test-input">test</label>
+    <input type="text" id="test-input" placeholder="test">
+    <button class="btn btn-primary" id="submit-btn">Отправить</button>
+{% endblock %}

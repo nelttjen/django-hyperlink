@@ -1,16 +1,10 @@
-import copy
 from re import compile
 
 from django.contrib.auth.models import User as DjangoUser
-from django.core.mail import send_mail
-from django.utils import timezone
 from rest_framework.authtoken.admin import User as RestUser
 from rest_framework.serializers import ModelSerializer, ValidationError
 
-from django_hyperlink.public_settings import DOMAIN
-from django_hyperlink.settings import EMAIL_HOST_USER
-from users.models import ActivateCode
-from users.tasks.register import send_activation_code
+from users.modules import Email, PasswordValidator
 
 
 class RegisterSerializer(ModelSerializer):
@@ -31,17 +25,14 @@ class RegisterSerializer(ModelSerializer):
 		password = self.initial_data.get('password')
 		password_again = self.initial_data.get('password_again')
 		username_validator = compile(r'^[A-Za-z0-9_-]{3,20}$')
-		password_validator = compile(r'^[A-Za-z0-9_#@$&*-]{3,50}$')
+		password_validator = PasswordValidator(password, password_again)
 		if not all([username, email, password, password_again]):
 			raise ValidationError('Не хватает аргументов')
 		if not username_validator.fullmatch(username):
 			raise ValidationError('Имя пользователя должно быть 3-20 символов и '
 			                      'содержать в себе только буквы латинского алфавита, а также символы _-')
-		if not password_validator.fullmatch(password):
-			raise ValidationError('Пароль должен быть 3-50 символов и '
-			                      'содержать в себе только буквы латинского алфавита, а также символы _#@$&*-')
-		if password != password_again:
-			raise ValidationError('Пароли не совпадают')
+		if isinstance(error := password_validator.validate(), str):
+			raise ValidationError(error)
 		if DjangoUser.objects.filter(username__iexact=username).first():
 			raise ValidationError('Имя пользователя уже занято')
 		if DjangoUser.objects.filter(email__iexact=email).first():
@@ -59,5 +50,5 @@ class RegisterSerializer(ModelSerializer):
 		)
 		user.is_active = False
 		user.save()
-		send_activation_code.delay(user_id=user.id)
+		Email(user.id).send_activation_mail()
 		return user
