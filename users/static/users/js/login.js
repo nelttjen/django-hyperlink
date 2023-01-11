@@ -17,12 +17,16 @@ function on_sublit_login(sender) {
         })
         .done((response) => {
             response = get_response(response);
-            setCookie("Token", response.token, 365);
+            setCookie("Token", response.content.token, 365);
             $(".done-msg").text("Авторизация успешна");
+            $(".errors").text("");
         })
         .fail((response) => {
             response = get_response(response);
-            $(".errors").text(response.msg);
+            if (response.msg) {
+                $(".errors").text(response.msg);
+            } else $(".errors").text("Неправильный логин или пароль");
+            
         });
 
 }

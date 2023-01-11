@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load my_tags %}
+{% block head %}
+    <style>
+    p.validation_error {
+        color: red;
+    }
+    p.validation_succ {
+        color: green;
+    }
+    </style>
+    <script src="{% static "users/js/recovery.js" %}?reload={% random_int 1 999999 %}"></script>
+{% endblock %}
+{% block container %}
+    <p id="validation_msg"></p>
+    <div class="input_block">
+        {% if code %}
+            <label for="code-input">Код восстановления</label>
+            <input type="text" placeholder="Код" id="code-input" class="form-control" value="{{ code }}">
+            <label for="pass1-input">Новый пароль</label>
+            <input type="password" placeholder="Новый пароль" id="pass1-input" class="form-control">
+            <label for="pass2-input">Повторите пароль</label>
+            <input type="password" placeholder="Повторите пароль" id="pass2-input" class="form-control">
+            <button id="password-submit" class="btn btn-primary">Подтвердить</button>
+        {% else %}
+            <label for="username-input">Имя пользователя или почта</label>
+            <input type="text" placeholder="Имя пользователя или почта" id="username-input" class="form-control">
+            <button id="username-submit" class="btn btn-primary">Получить код</button>
+        {% endif %}
+    </div>
+{% endblock %}

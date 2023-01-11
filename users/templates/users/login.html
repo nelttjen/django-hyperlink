@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load my_tags %}
 {% block head %}
-    <script src="{% static "users/js/login.js" %}"></script>
+    <script src="{% static "users/js/login.js" %}?reload={% random_int 1 999999 %}"></script>
 {% endblock %}
 {% block container %}
     <p style="color: green; padding: 10px; border: 1px solid green; width: fit-content" class="done-msg"> {{ message }}</p>
@@ -14,5 +15,5 @@
     <input type="password" class="form-control" id="password">
   </div>
   <button class="btn btn-primary" id="button-login">Submit</button>
-    <div class="errors"></div>
+    <div class="errors" style="color:red;"></div>
 {% endblock %}

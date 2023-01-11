@@ -28,6 +28,23 @@ class User(models.Model):
 		verbose_name_plural = 'Пользователи'
 		db_table = 'custom_users'
 
+	def check_ban(self):
+		if self.ban['is_banned']:
+			msg = self.ban['ban_message']
+			until = self.ban['ban_until']
+			if until:
+				if timezone.now().timestamp() < datetime.datetime.fromtimestamp(until).timestamp():
+					return True, f'Пользователь заблокирован до '\
+					              f'{datetime.datetime.fromtimestamp(until).strftime("%d.%m.%Y %H:%M:%S")}.' \
+					              f'{" Комментарий администратора: " + msg if msg else ""}'
+				else:
+					self.ban = user_ban_json()
+					self.save()
+			else:
+				return True, f'Пользователь заблокирован навсегда.' \
+				               f'{" Комментарий администратора: " + msg if msg else ""}'
+		return False, 'збс'
+
 	def __str__(self):
 		return self.user.username
 
