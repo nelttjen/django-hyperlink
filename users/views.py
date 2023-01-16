@@ -14,12 +14,13 @@ def login(request):
 
 
 def register(request):
-	return HttpResponseRedirect('/users/login/')
+	return render(request, 'users/register.html')
 
 
 def activate(request):
 	code = request.GET.get('code', '')
-	return render(request, 'users/activate.html', {'code': code})
+	info = request.GET.get('info', '')
+	return render(request, 'users/activate.html', {'code': code, 'info': info})
 
 
 def recovery(request):

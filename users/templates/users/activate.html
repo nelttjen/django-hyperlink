@@ -5,6 +5,7 @@
     <script src="{% static "users/js/activate.js" %}?reload={% random_int 1 999999 %}"></script>
 {% endblock %}
 {% block container %}
+    <p class="info" style="color:green;">{{ info }}</p>
     <label for="code_input">Код активации</label>
     <input type="text" placeholder="Код активации" class="form-control" value="{{ code }}" id="code_input">
     <button class="btn btn-primary" id="submit_btn">Отправить</button>
