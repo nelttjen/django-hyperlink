@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_yasg',
     'debug_toolbar',
-    'corsheaders'
+    'corsheaders',
     'link.apps.LinkConfig',
     'users.apps.UsersConfig'
 ]
@@ -192,8 +192,8 @@ DEBUG_TOOLBAR_CONFIG = {
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    "localhost",
-    "localhost:8000",
-    "127.0.0.1",
-    '127.0.0.1:8000'
+    "http://localhost",
+    "http://localhost:8000",
+    "http://127.0.0.1",
+    'http://127.0.0.1:8000'
 ]
