@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # redis
+  redis:
+    restart: always
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    container_name: redis
+
+  #  postgres db
+  db:
+    restart: always
+    image: postgres
+    mem_reservation: 1G
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin_pass123
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+
+  # django app
+  django:
+    build: .
+    volumes:
+      - .:/app/
+    ports:
+      - "8000:8000"
+    image: docker-app:django
+    container_name: django
+    command: python3 manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - db
+    environment:
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+
+  #  celery
+  celery:
+    restart: always
+    build: .
+    command: celery -A django_hyperlink.celery_app worker -P solo --loglevel=INFO --without-gossip --without-mingle --without-heartbeat -Ofair
+    volumes:
+      - .:/app/
+    container_name: celery
+    depends_on:
+      - db
+      - redis
+      - django
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5454:5454/tcp"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=postgres@postgres.com
+      - PGADMIN_DEFAULT_PASSWORD=admin_pass123
+      - PGADMIN_LISTEN_PORT=5454
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
