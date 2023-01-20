@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # redis
+  redis:
+    restart: always
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    container_name: redis
+
+  #  postgres db
+  db:
+    restart: always
+    image: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    env_file:
+      - ./django_hyperlink/.env
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+
+  # django app
+  django:
+    build: .
+    volumes:
+      - .:/app/
+    ports:
+      - "8000:8000"
+    image: docker-app:django
+    container_name: django
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./django_hyperlink/.env
+
+  #  celery
+  celery:
+    restart: always
+    build: .
+    command:
+     - celery
+     - -A
+     - django_hyperlink.celery_app
+     - worker
+     - -P
+     - solo
+     - --loglevel=INFO
+     - --without-gossip
+     - --without-mingle
+     - --without-heartbeat
+     - -Ofair
+    volumes:
+      - .:/app/
+    container_name: celery
+    depends_on:
+      - db
+      - redis
+      - django
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5454:5454/tcp"
+    env_file:
+      - ./django_hyperlink/.env
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
