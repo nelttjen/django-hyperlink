@@ -19,6 +19,11 @@ class User(models.Model):
 		'ban_message': None,
 	}
 
+	profile = {
+		'display_name': ''
+		'bio'
+	}
+
 	user = models.OneToOneField(verbose_name='Джанго юзер', to=DjangoUser, on_delete=models.CASCADE)
 
 	ban = models.JSONField(verbose_name='Информация о бане', default=user_ban_json)
