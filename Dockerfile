@@ -11,11 +11,8 @@ RUN python3 -m venv venv
 RUN source "venv/bin/activate"
 RUN pip install -r requirements.txt
 
-ENV PATH="venv/bin/:$PATH"
-
 COPY . /app
 
 ENV PORT=8000
 EXPOSE $PORT
 
-CMD ["python3", "manage.py", "migrate"]
