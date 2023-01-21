@@ -13,6 +13,8 @@ from .swagger import *
 class ActivateView(APIView):
     permission_classes = (permissions.AllowAny, )
 
+    serializer_class = ActivateSerializer
+
     @swagger_auto_schema(
         operation_id='post-activate',
         operation_description='Активировать пользователя по коду',
@@ -27,7 +29,7 @@ class ActivateView(APIView):
     )
     def post(self, request):
 
-        serializer = ActivateSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             raise ParseError(DefaultSerializer.get_error_message(serializer))
         serializer.activate()

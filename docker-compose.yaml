@@ -22,6 +22,16 @@ services:
       - "5432:5432"
 
   # django app
+  django-migrate:
+    build: .
+    volumes:
+      - .:/app/
+    image: docker-app:django
+    container_name: django-migrate
+    command: sh -c "python manage.py migrate && sleep 1d"
+    depends_on:
+      - db
+
   django:
     build: .
     volumes:
@@ -30,9 +40,10 @@ services:
       - "8000:8000"
     image: docker-app:django
     container_name: django
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: python manage.py runserver 0.0.0.0:8000
     depends_on:
       - db
+      - django-migrate
     env_file:
       - ./django_hyperlink/.env
 
@@ -45,8 +56,6 @@ services:
      - -A
      - django_hyperlink.celery_app
      - worker
-     - -P
-     - solo
      - --loglevel=INFO
      - --without-gossip
      - --without-mingle

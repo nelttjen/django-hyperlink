@@ -38,6 +38,6 @@ class RegisterView(APIView):
         return Response(DefaultSerializer({
             'msg': 'Регистрация успешна! На ваш Email была отправлена ссылка для активации аккаунта',
             'content': serializer.data,
-            'entra': {'link': f'{DOMAIN}/users/activate/'}
+            'extra': {'link': f'{DOMAIN}/users/activate/'}
         }).data)
 
