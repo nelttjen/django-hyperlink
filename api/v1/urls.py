@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import *
+from users.api import *
 
 link_patterns = [
 

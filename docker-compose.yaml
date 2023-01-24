@@ -21,17 +21,30 @@ services:
     ports:
       - "5432:5432"
 
-  # django app
+  # migrations
   django-migrate:
     build: .
     volumes:
       - .:/app/
     image: docker-app:django
     container_name: django-migrate
-    command: sh -c "python manage.py migrate && sleep 1d"
+    command: python manage.py migrate
     depends_on:
       - db
 
+  # tests
+  django-tests:
+    build: .
+    volumes:
+      - .:/app/
+    image: docker-app:django
+    container_name: django-tests
+    command: python manage.py test
+    depends_on:
+      - db
+      - django-migrate
+
+  # django app
   django:
     build: .
     volumes:
@@ -44,6 +57,7 @@ services:
     depends_on:
       - db
       - django-migrate
+      - django-tests
     env_file:
       - ./django_hyperlink/.env
 
@@ -77,6 +91,19 @@ services:
       - ./django_hyperlink/.env
     depends_on:
       - db
+
+  # just to say all is ready
+  done:
+    image: docker
+    command: sh -c "sleep 5s && echo done"
+    depends_on:
+      - db
+      - django-migrate
+      - django-tests
+      - django
+      - redis
+      - celery
+      - pgadmin
 
 volumes:
   pgdata:

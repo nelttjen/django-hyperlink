@@ -13,6 +13,7 @@ from .swagger import *
 
 class RegisterView(APIView):
     permission_classes = (permissions.AllowAny, )
+    serializer_class = RegisterSerializer
 
     @swagger_auto_schema(
         operation_id='post-register',
@@ -31,7 +32,7 @@ class RegisterView(APIView):
     )
     def post(self, request):
 
-        serializer = RegisterSerializer(data=request.data, partial=True)
+        serializer = self.serializer_class(data=request.data, partial=True)
         if not serializer.is_valid():
             raise ParseError(DefaultSerializer.get_error_message(serializer))
         serializer.create(serializer.validated_data)
