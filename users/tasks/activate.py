@@ -13,3 +13,5 @@ def activate_user(code):
 	code.is_used = True
 	code.activated_date = timezone.now()
 	code.save()
+
+	return True

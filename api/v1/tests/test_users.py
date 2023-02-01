@@ -1,14 +1,17 @@
 import copy
 
+from unittest.mock import patch
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework.test import RequestsClient
 
-from django_hyperlink.public_settings import DOMAIN
-from .test_items_base import TestItemsBase
+from django_hyperlink.settings import DOMAIN
 from users.api import *
-from users.models import User as CustomUser
+from users.tasks import *
+from users.models import User as CustomUser, ActivateCode
+from .test_items_base import TestItemsBase
 
 client = RequestsClient()
 
@@ -155,6 +158,10 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         self.assertNotEqual(response.status_code, 200)
         self.assertEqual(User.objects.filter(username=username).count(), 1)
 
+        code = ActivateCode.objects.filter(user_id=new_user.id, is_used=False, type=1).first()
+        self.assertTrue(code)
+        self.assertGreater(code.expired_date, timezone.now())
+
     def test_user_register_user_double_username(self):
         username = 'test'
         email1 = 'test1@mail.ru'
@@ -188,6 +195,7 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         self.assertEqual(User.objects.filter(username=username).count(), 1)
 
     def test_user_register_user_double_email(self):
+
         username1 = 'test1'
         username2 = 'test2'
         email = 'test@mail.ru'
@@ -219,4 +227,91 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         self.assertNotEqual(response2.status_code, 200)
         self.assertEqual(User.objects.filter(email=email).count(), 1)
 
+    def test_user_register_username_error(self):
+        data = {
+            'username': 'us',
+            'email': 'mail@mail.mail',
+            'password': 'pass123123',
+            'password_again': 'pass123123'
+        }
 
+        url = self.register_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(User.objects.filter(username='us').first())
+
+    def test_user_register_username__regex_error(self):
+        username = '@#$@$%#$^$%$%#$^&%^*^*^#@$@#$'
+        data = {
+            'username': username,
+            'email': 'mail@mail.mail',
+            'password': 'pass123123',
+            'password_again': 'pass123123'
+        }
+
+        url = self.register_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(User.objects.filter(username=username).first())
+
+    def test_user_register_password_error(self):
+        data = {
+            'username': 'us',
+            'email': 'mail@mail.mail',
+            'password': '123',
+            'password_again': '123'
+        }
+
+        url = self.register_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(User.objects.filter(username='us').first())
+
+
+class TestCeleryTasks(TestCase, TestItemsBase):
+
+    def setUp(self) -> None:
+        self.create_users()
+
+    def test_celery_send_email_prime(self):
+
+        result = send_activation_code(
+            email='test@mail.ru',
+            subject='test',
+            message='test',
+            fail_silently=False
+        )
+
+        self.assertTrue(result)
+
+    @patch('users.tasks.user_code.send_mail')
+    def test_celery_mock_send_email_true(self, mock_send):
+        mock_send.return_value = 1
+
+        result = send_activation_code(
+            email='test@mail.ru',
+            subject='test',
+            message='test',
+            fail_silently=False
+        )
+
+        self.assertTrue(result)
+
+    @patch('users.tasks.user_code.send_mail')
+    def test_celery_mock_send_email_false(self, mock_send):
+        mock_send.return_value = 0
+
+        result = send_activation_code(
+            email='test@mail.ru',
+            subject='test',
+            message='test',
+            fail_silently=False
+        )
+
+        self.assertFalse(result)

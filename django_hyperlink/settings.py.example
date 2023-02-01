@@ -17,3 +17,9 @@ if DEBUG:
             'NAME': "db.sqlite3",
         }
     }
+
+RUN_TESTS = bool(int(os.environ.get('RUN_TESTS', 0)))
+if RUN_TESTS:
+    REDIS_HOST = 'localhost'
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER', f'redis://{REDIS_HOST}:{REDIS_PORT}/0')
+    CELERY_RESULT_BACKEND = os.environ.get('CELERY_BACKEND', f'redis://{REDIS_HOST}:{REDIS_PORT}/0')
