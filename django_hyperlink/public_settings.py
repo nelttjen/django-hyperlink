@@ -31,8 +31,14 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_yasg',
     'debug_toolbar',
+    'corsheaders',
+
+    # Apps
     'link.apps.LinkConfig',
-    'users.apps.UsersConfig'
+    'users.apps.UsersConfig',
+
+    # API app
+    'api.v1.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -43,7 +49,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware'
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'django_hyperlink.urls'
@@ -176,3 +183,24 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+# DEBUG TOOLBAR
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': 'django_hyperlink.middleware.show_toolbar',
+    'INTERNAL_IPS': [
+        "localhost",
+        "localhost:8000",
+        "127.0.0.1",
+        '127.0.0.1:8000'
+    ]
+}
+
+# CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1",
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8000',
+]

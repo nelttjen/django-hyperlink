@@ -12,6 +12,7 @@ from .swagger import *
 
 class RecoveryView(APIView):
     permission_classes = (permissions.AllowAny, )
+    serializer_class = RecoverySerializer
 
     @swagger_auto_schema(
         operation_id='post-recovery',
@@ -27,7 +28,7 @@ class RecoveryView(APIView):
         responses={200: RecoveryPostSerializer(), 400: DefaultSerializer()}
     )
     def post(self, request):
-        serializer = RecoverySerializer(data=request.data, method='post')
+        serializer = self.serializer_class(data=request.data, method='post')
         if not serializer.is_valid():
             raise ParseError(DefaultSerializer.get_error_message(serializer))
         serializer.send_mail()
@@ -50,7 +51,7 @@ class RecoveryView(APIView):
         responses={200: RecoveryPutSerializer(), 400: DefaultSerializer()}
     )
     def put(self, request):
-        serializer = RecoverySerializer(data=request.data, method='put')
+        serializer = self.serializer_class(data=request.data, method='put')
         if not serializer.is_valid():
             raise ParseError(DefaultSerializer.get_error_message(serializer))
         serializer.recovery_user()
