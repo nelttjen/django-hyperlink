@@ -1,19 +1,32 @@
 import copy
+import datetime
+import logging
+import time
 
 from unittest.mock import patch
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import resolve, reverse
 from django.contrib.auth.models import User
 from django.utils import timezone
+from rest_framework.authtoken.models import Token
 from rest_framework.test import RequestsClient
 
-from django_hyperlink.settings import DOMAIN
+from django_hyperlink.settings import DOMAIN, DATABASES
 from users.api import *
 from users.tasks import *
 from users.models import User as CustomUser, ActivateCode
+from users.modules import PasswordValidator
 from .test_items_base import TestItemsBase
 
 client = RequestsClient()
+logger = logging.getLogger(__name__)
+logging.disable(logging.CRITICAL)
+logging.disable(logging.WARNING)
+logging.disable(logging.WARN)
+logging.disable(logging.ERROR)
+
+
+print(f'Stating user tests using db backend: {DATABASES["default"]["ENGINE"]}')
 
 
 class TestUsersCorrectView(TestCase):
@@ -102,6 +115,9 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         self.create_users()
 
         self.register_url = DOMAIN + reverse('api-users-register')
+        self.activate_url = DOMAIN + reverse('api-users-activate')
+        self.login_url = DOMAIN + reverse('api-users-login')
+        self.recovery_url = DOMAIN + reverse('api-users-recovery')
 
     def test_users_register_user_created(self):
         username = 'test'
@@ -238,12 +254,11 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         url = self.register_url
 
         response = client.post(url, data=data)
-
         self.assertEqual(response.status_code, 400)
         self.assertFalse(User.objects.filter(username='us').first())
 
-    def test_user_register_username__regex_error(self):
-        username = '@#$@$%#$^$%$%#$^&%^*^*^#@$@#$'
+    def test_user_register_username_regex_error(self):
+        username = '@#$@$%#$^$%$%#$^#$'
         data = {
             'username': username,
             'email': 'mail@mail.mail',
@@ -260,10 +275,26 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
 
     def test_user_register_password_error(self):
         data = {
-            'username': 'us',
+            'username': 'username123',
             'email': 'mail@mail.mail',
-            'password': '123',
-            'password_again': '123'
+            'password': '1',
+            'password_again': '1'
+        }
+
+        url = self.register_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(User.objects.filter(username='us').first())
+        self.assertIsInstance(PasswordValidator('1', '1').validate(), str)
+
+    def test_user_register_password_noteq(self):
+        data = {
+            'username': 'username123',
+            'email': 'mail@mail.mail',
+            'password': 'Password_123',
+            'password_again': 'Password_1234'
         }
 
         url = self.register_url
@@ -273,6 +304,411 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(User.objects.filter(username='us').first())
 
+    def test_user_activate(self):
+        user = User.objects.create_user(
+            username='test',
+            email='test@test.test',
+            password='test',
+            is_active=False,
+        )
+
+        code = ActivateCode.objects.create(
+            type=1,
+            user=user,
+        )
+
+        data = {'code': code.code}
+
+        url = self.activate_url
+
+        response = client.post(url, data=data)
+        # celery task using test db
+        activate_user(code.code)
+
+        self.assertEqual(response.status_code, 200)
+
+        new_user = User.objects.get(pk=user.pk)
+        new_code = ActivateCode.objects.get(pk=code.pk)
+
+        self.assertTrue(new_user.is_active)
+        self.assertTrue(new_code.is_used)
+        self.assertIsNotNone(new_code.activated_date)
+        self.assertEqual(new_code.type, 1)
+
+    def test_user_activate_expired(self):
+        user = User.objects.create_user(
+            username='test',
+            email='test@test.test',
+            password='test',
+            is_active=False,
+        )
+
+        code = ActivateCode.objects.create(
+            type=1,
+            user=user,
+        )
+        ActivateCode.objects.filter(id=code.id).update(
+            expired_date=timezone.now() - datetime.timedelta(days=9999)
+        )
+
+        data = {'code': code.code}
+
+        url = self.activate_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+
+        new_user = User.objects.get(pk=user.id)
+
+        self.assertFalse(new_user.is_active)
+        self.assertFalse(ActivateCode.objects.filter(id=code.id).exists())
+
+    def test_user_activate_invalid_code(self):
+        user = User.objects.create_user(
+            username='test',
+            email='test@test.test',
+            password='test',
+            is_active=False,
+        )
+
+        data = {'code': 'fsdfsdfsaSFS'}
+        url = self.activate_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+
+        new_user = User.objects.get(pk=user.pk)
+
+        self.assertFalse(new_user.is_active)
+
+    def test_user_activate_use_other_code_type(self):
+        user = User.objects.create_user(
+            username='test',
+            email='test@test.test',
+            password='test',
+            is_active=False,
+        )
+
+        code = ActivateCode.objects.create(
+            type=2,
+            user_id=user.id,
+        )
+
+        data = {'code': code.code}
+
+        url = self.activate_url
+
+        response = client.post(url, data=data)
+
+        new_user = User.objects.get(pk=user.pk)
+        new_code = ActivateCode.objects.get(pk=code.pk)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(new_user.is_active)
+        self.assertFalse(new_code.is_used)
+        self.assertEqual(new_code.type, 2)
+        self.assertGreater(new_code.expired_date, timezone.now())
+
+    def test_user_login(self):
+        usr = 'login'
+        pwd = 'login_password'
+        user = User.objects.create_user(
+            username=usr,
+            email='login@test.com',
+            password=pwd,
+            is_active=True
+        )
+
+        data = {
+            'username': usr, 'password': pwd
+        }
+        url = self.login_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 200)
+
+        token = Token.objects.filter(user_id=user.id).first()
+
+        self.assertEqual(response.json()['content']['token'], token.key)
+        self.assertEqual(response.json()['content']['username'], user.username)
+
+    def test_user_login_by_email(self):
+        mail = 'login@test.com'
+        pwd = 'login_password'
+        user = User.objects.create_user(
+            username='login',
+            email=mail,
+            password=pwd,
+            is_active=True
+        )
+
+        data = {
+            'username': mail, 'password': pwd
+        }
+        url = self.login_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 200)
+
+        token = Token.objects.filter(user_id=user.id).first()
+
+        self.assertEqual(response.json()['content']['token'], token.key)
+        self.assertEqual(response.json()['content']['username'], user.username)
+
+    def test_user_login_banned(self):
+        usr = 'login'
+        pwd = 'login_password'
+        user = User.objects.create_user(
+            username=usr,
+            email='login@test.com',
+            password=pwd,
+            is_active=True,
+        )
+        custom_user = CustomUser.objects.get(user_id=user.id)
+        custom_user.ban = {'is_banned': True, 'ban_until': None, 'ban_message': None}
+        custom_user.save()
+
+        url = self.login_url
+        data = {'username': usr, 'password': pwd}
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('заблокирован', response.json()['msg'].lower())
+        self.assertIn('навсегда', response.json()['msg'].lower())
+
+        custom_user.ban = {'is_banned': True,
+                           'ban_until': datetime.datetime(day=20, month=2, year=2028).timestamp(),
+                           'ban_message': None}
+        custom_user.save()
+
+        response = client.post(url, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('заблокирован', response.json()['msg'].lower())
+        self.assertIn('20.02.2028', response.json()['msg'].lower())
+
+        custom_user.ban = custom_user.ban_json
+        custom_user.save()
+
+        response = client.post(url, data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['content']['token'])
+        self.assertEqual(response.json()['content']['username'], user.username)
+
+    def test_users_login_ban_expired(self):
+        usr = 'login'
+        pwd = 'login_password'
+        user = User.objects.create_user(
+            username=usr,
+            email='login@test.com',
+            password=pwd,
+            is_active=True,
+        )
+        custom_user = CustomUser.objects.get(user_id=user.id)
+        custom_user.ban = {'is_banned': True,
+                           'ban_until': datetime.datetime(day=1, month=1, year=1999).timestamp(),
+                           'ban_message': None}
+        custom_user.save()
+
+        url = self.login_url
+        data = {'username': usr, 'password': pwd}
+
+        response = client.post(url, data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['content']['token'])
+        self.assertEqual(response.json()['content']['username'], user.username)
+
+        updated = CustomUser.objects.get(pk=custom_user.id)
+        self.assertFalse(updated.ban['is_banned'])
+        self.assertIsNone(updated.ban['ban_until'])
+        self.assertIsNone(updated.ban['ban_message'])
+
+    def test_login_no_such_user(self):
+        usr = 'login'
+        pwd = 'login_password'
+        user = User.objects.create_user(
+            username=usr,
+            email='login@test.com',
+            password=pwd,
+            is_active=True,
+        )
+
+        url = self.login_url
+        data = {'username': usr + "sfsf", 'password': pwd}
+
+        response = client.post(url, data=data)
+        self.assertEqual(response.status_code, 400)
+
+    def test_user_login_invalid_username(self):
+        usr = 'login'
+        pwd = 'login_password'
+        user = User.objects.create_user(
+            username=usr,
+            email='login@test.com',
+            password=pwd,
+            is_active=True,
+        )
+
+        url = self.login_url
+        data = {'username': usr + "sfsf", 'password': pwd}
+
+        response = client.post(url, data=data)
+        self.assertEqual(response.status_code, 400)
+
+    def test_user_login_invalid_password(self):
+        usr = 'login'
+        pwd = 'login_password'
+        user = User.objects.create_user(
+            username=usr,
+            email='login@test.com',
+            password=pwd,
+            is_active=True,
+        )
+
+        url = self.login_url
+        data = {'username': usr, 'password': pwd + "sfsf"}
+
+        response = client.post(url, data=data)
+        self.assertEqual(response.status_code, 400)
+
+    def test_users_recovery_post(self):
+        user = self.common_user
+
+        data = {'username': user.username}
+        url = self.recovery_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertTrue(ActivateCode.objects.filter(
+            user_id=user.id, type=2, is_used=False, expired_date__gt=timezone.now()
+        ).exists())
+
+    def test_users_recovery_post_fake_username(self):
+        user = self.common_user
+
+        data = {'username': user.username + '123'}
+        url = self.recovery_url
+
+        response = client.post(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertFalse(ActivateCode.objects.filter(
+            user__username=user.username, type=2, is_used=False, expired_date__gt=timezone.now()
+        ).select_related('user').exists())
+
+    def test_users_recovery_put(self):
+        user = self.common_user
+
+        data = {'username': user.username}
+        url = self.recovery_url
+
+        response_post = client.post(url, data=data)
+
+        self.assertEqual(response_post.status_code, 200)
+
+        code = ActivateCode.objects.filter(
+            user_id=user.id, type=2, is_used=False, expired_date__gt=timezone.now()
+        ).first()
+        self.assertTrue(code)
+
+        new_pass = 'TestNewPass_123'
+        data_put = {'code': code.code, 'password': new_pass, 'password_again': new_pass}
+
+        self.assertTrue(user.check_password('common_user'))
+
+        response_put = client.put(url, data=data_put)
+
+        # celery task using correct db
+        recovery_user(code_id=code.id, user_id=code.user.id, password=new_pass)
+
+        self.assertEqual(response_put.status_code, 200)
+        self.assertTrue(ActivateCode.objects.get(pk=code.id).is_used)
+
+        changed_user = User.objects.get(pk=user.id)
+
+        self.assertNotEqual(user.password, changed_user.password)
+
+        data_login = {'username': changed_user.username, 'password': new_pass}
+        url_login = self.login_url
+
+        response_login = client.post(url_login, data=data_login)
+
+        self.assertEqual(response_login.status_code, 200)
+        self.assertTrue(changed_user.check_password(new_pass))
+        self.assertFalse(changed_user.check_password('common_user'))
+        self.assertEqual(response_login.json()['content']['username'], user.username)
+
+    def test_users_recovery_put_code_used(self):
+        user = self.common_user
+
+        code = ActivateCode.objects.create(
+            user_id=user.id, type=2
+        )
+        ActivateCode.objects.filter(id=code.id).update(is_used=True)
+
+        url = self.recovery_url
+        new_pass = 'TestPass123'
+
+        self.assertTrue(user.check_password('common_user'))
+
+        response = client.put(url, data={'code': code.code, 'password': new_pass, 'password_again': new_pass})
+
+        self.assertEqual(response.status_code, 400)
+
+        updated_user = User.objects.get(pk=user.id)
+        self.assertTrue(updated_user.check_password('common_user'))
+        self.assertFalse(updated_user.check_password(new_pass))
+
+    def test_users_recovery_put_code_expired(self):
+        user = self.common_user
+
+        code = ActivateCode.objects.create(
+            user_id=user.id, type=2
+        )
+        ActivateCode.objects.filter(id=code.id).update(expired_date=timezone.now() - datetime.timedelta(days=365))
+
+        url = self.recovery_url
+        new_pass = 'TestPass123'
+
+        self.assertTrue(user.check_password('common_user'))
+
+        response = client.put(url, data={'code': code.code, 'password': new_pass, 'password_again': new_pass})
+
+        self.assertEqual(response.status_code, 400)
+
+        updated_user = User.objects.get(pk=user.id)
+        self.assertTrue(updated_user.check_password('common_user'))
+        self.assertFalse(updated_user.check_password(new_pass))
+        self.assertFalse(ActivateCode.objects.filter(id=code.id).exists())
+
+    def test_users_recovery_put_password_xyuni(self):
+        user = self.common_user
+
+        code = ActivateCode.objects.create(
+            user_id=user.id, type=2
+        )
+
+        url = self.recovery_url
+        new_pass = '1'
+
+        self.assertTrue(user.check_password('common_user'))
+
+        response = client.put(url, data={'code': code.code, 'password': new_pass, 'password_again': new_pass})
+
+        self.assertEqual(response.status_code, 400)
+
+        updated_user = User.objects.get(pk=user.id)
+        self.assertIsInstance(PasswordValidator(new_pass, new_pass).validate(), str)
+        self.assertTrue(updated_user.check_password('common_user'))
+        self.assertFalse(updated_user.check_password(new_pass))
+
 
 class TestCeleryTasks(TestCase, TestItemsBase):
 
@@ -280,7 +716,6 @@ class TestCeleryTasks(TestCase, TestItemsBase):
         self.create_users()
 
     def test_celery_send_email_prime(self):
-
         result = send_activation_code(
             email='test@mail.ru',
             subject='test',

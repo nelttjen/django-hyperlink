@@ -9,7 +9,7 @@ from users.models import ActivateCode, User, DjangoUser
 class ActivateCodeAdmin(admin.ModelAdmin):
 	list_display = ('id', 'code', 'user', 'activated_date')
 	list_display_links = ('id', 'code')
-	readonly_fields = ('code', 'activated_date', 'user', 'is_used', 'type')
+	readonly_fields = ('activated_date', 'is_used', 'expired_date', 'code')
 
 
 @admin.register(User)

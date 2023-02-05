@@ -10,7 +10,7 @@ services:
     container_name: redis
 
   #  postgres db
-  db:
+  postgres_db:
     restart: always
     image: postgres
     volumes:
@@ -30,19 +30,7 @@ services:
     container_name: django-migrate
     command: python manage.py migrate
     depends_on:
-      - db
-
-  # tests
-  django-tests:
-    build: .
-    volumes:
-      - .:/app/
-    image: docker-app:django
-    container_name: django-tests
-    command: python manage.py test
-    depends_on:
-      - db
-      - django-migrate
+      - postgres_db
 
   # django app
   django:
@@ -55,9 +43,8 @@ services:
     container_name: django
     command: python manage.py runserver 0.0.0.0:8000
     depends_on:
-      - db
+      - postgres_db
       - django-migrate
-      - django-tests
     env_file:
       - ./django_hyperlink/.env
 
@@ -79,7 +66,7 @@ services:
       - .:/app/
     container_name: celery
     depends_on:
-      - db
+      - postgres_db
       - redis
       - django
 
@@ -90,16 +77,15 @@ services:
     env_file:
       - ./django_hyperlink/.env
     depends_on:
-      - db
+      - postgres_db
 
   # just to say all is ready
   done:
     image: docker
     command: sh -c "sleep 5s && echo done"
     depends_on:
-      - db
+      - postgres_db
       - django-migrate
-      - django-tests
       - django
       - redis
       - celery
