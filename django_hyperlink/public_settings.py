@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
-    'debug_toolbar',
     'corsheaders',
 
     # Apps

@@ -62,12 +62,18 @@ class ActivateCode(models.Model):
 		(2, 'Восстановление пароля')
 	)
 
-	def generate_code(self):
+	def save(self, *args, **kwargs):
+		if not ActivateCode.objects.filter(id=self.pk).first():
+			self.generate_code(save=False)
+		super().save(*args, **kwargs)
+
+	def generate_code(self, save=True):
 		act_code = uuid.uuid4().hex[:32]
 		expire = timezone.now() + datetime.timedelta(minutes=ActivateCode.expired_min)
 		self.code = act_code
 		self.expired_date = expire
-		self.save()
+		if save:
+			self.save()
 		return self
 
 	user = models.ForeignKey(verbose_name='Юзер', to=DjangoUser, on_delete=models.CASCADE)

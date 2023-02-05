@@ -1,15 +1,17 @@
+import os
+
 from django_hyperlink.public_settings import *
 
 
-SECRET_KEY = 'secret'
+SECRET_KEY =
 DEBUG = bool(int(os.environ.get('DEBUG', 0)))
-TEST = bool(int(os.environ.get('TEST', 0)))
+LOCALRUN = bool(int(os.environ.get('TEST', 0)))
 ALLOWED_HOSTS = ['*', ]
 
-EMAIL_HOST_USER = '@gmail.com'
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_USER =
+EMAIL_HOST_PASSWORD =
 
-if DEBUG:
+if LOCALRUN:
     CORS_ALLOW_ALL_ORIGINS = True
     DATABASES = {
         'default': {
@@ -17,9 +19,7 @@ if DEBUG:
             'NAME': "db.sqlite3",
         }
     }
-
-RUN_TESTS = bool(int(os.environ.get('RUN_TESTS', 0)))
-if RUN_TESTS:
     REDIS_HOST = 'localhost'
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER', f'redis://{REDIS_HOST}:{REDIS_PORT}/0')
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_BACKEND', f'redis://{REDIS_HOST}:{REDIS_PORT}/0')
+

@@ -1,5 +1,6 @@
 import datetime
 
+from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
@@ -22,7 +23,9 @@ class LoginSerializer(serializers.Serializer):
 
 	def validate(self, attrs):
 		if (username := self.initial_data.get('username')) and (password := self.initial_data.get('password')):
-			self.user = User.objects.filter(username=username).first()
+			self.user = User.objects.filter(
+				Q(username=username) | Q(email=username)
+			).first()
 			if not self.user:
 				raise ValidationError(_('Неверный логин или пароль'))
 			if not self.user.check_password(password):
