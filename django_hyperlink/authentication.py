@@ -1,4 +1,5 @@
 from rest_framework import authentication, exceptions
+from django.contrib.auth.models import AnonymousUser
 
 
 class CustomTokenAuth(authentication.TokenAuthentication):
@@ -6,7 +7,7 @@ class CustomTokenAuth(authentication.TokenAuthentication):
 	def authenticate_credentials(self, key):
 		self.model = self.get_model()
 		if not (token := self.model.objects.select_related('user').filter(key=key).first()):
-			raise exceptions.AuthenticationFailed('Учетные данные не были предоставлены.')
+			return AnonymousUser, None
 
 		if not token.user.is_active:
 			raise exceptions.AuthenticationFailed('Пользователь неактивен')

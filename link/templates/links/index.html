@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Index</title>
-</head>
-<body>
-<div class="test">123</div>
-</body>
-</html>
+{% extends 'base.html' %}
+{% load static %}
+{% load my_tags %}
+{% block head %}
+    <script src="{% static "links/js/index.js" %}?reload={% random_int 1 999999 %}"></script>
+{% endblock %}
+{% block container %}
+    <input type="hidden" id="code" value="{{ code }}">
+    <h1 style="display: none" id="main-info">Вы будете перенаправлены через: <span id="timer"></span></h1>
+{% endblock %}

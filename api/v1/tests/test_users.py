@@ -750,3 +750,44 @@ class TestCeleryTasks(TestCase, TestItemsBase):
         )
 
         self.assertFalse(result)
+
+    def test_celery_activate_prime(self):
+        user = self.common_user
+        user.is_active = False
+        user.save()
+
+        code = ActivateCode.objects.create(
+            type=1, user_id=user.id
+        )
+
+        result = activate_user(code=code.code)
+
+        updated_user = User.objects.get(pk=user.id)
+        updated_code = ActivateCode.objects.get(pk=code.id)
+
+        self.assertTrue(result)
+        self.assertTrue(updated_user.is_active)
+        self.assertTrue(updated_code.is_used)
+        self.assertIsNotNone(updated_code.activated_date)
+
+    def test_celery_activate_user(self):
+        user = self.common_user
+
+        code = ActivateCode.objects.create(
+            type=2, user_id=user.id
+        )
+        new_password = 'TestSuperPass123'
+
+        self.assertTrue(user.check_password('common_user'))
+
+        result = recovery_user(code_id=code.id, user_id=user.id, password=new_password)
+
+        updated_user = User.objects.get(pk=user.id)
+        updated_code = ActivateCode.objects.get(pk=code.id)
+
+        self.assertTrue(result)
+        self.assertNotEqual(updated_user.password, user.password)
+        self.assertTrue(updated_code.is_used)
+        self.assertIsNotNone(updated_code.activated_date)
+        self.assertTrue(updated_user.check_password(new_password))
+        self.assertFalse(updated_user.check_password('common_user'))

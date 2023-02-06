@@ -9,26 +9,26 @@ from users.models import ActivateCode
 
 @celery_app.task
 def send_activation_code(email, subject, message, fail_silently=not DEBUG):
-	if isinstance(message, list):
-		message = message[0]
-	result = send_mail(
-		subject=subject,
-		message=message,
-		from_email=EMAIL_HOST_USER,
-		recipient_list=[email, ],
-		fail_silently=fail_silently
-	)
-	return bool(result)
+    if isinstance(message, list):
+        message = message[0]
+    result = send_mail(
+        subject=subject,
+        message=message,
+        from_email=EMAIL_HOST_USER,
+        recipient_list=[email, ],
+        fail_silently=fail_silently
+    )
+    return bool(result)
 
 
 @celery_app.task
 def recovery_user(code_id, user_id, password):
-	ActivateCode.objects.filter(id=code_id).update(
-		is_used=True,
-		activated_date=timezone.now()
-	)
-	user = User.objects.filter(id=user_id).first()
-	user.set_password(password)
-	user.save()
+    ActivateCode.objects.filter(id=code_id).update(
+        is_used=True,
+        activated_date=timezone.now()
+    )
+    user = User.objects.filter(id=user_id).first()
+    user.set_password(password)
+    user.save()
 
-	return True
+    return True

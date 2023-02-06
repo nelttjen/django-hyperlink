@@ -1,9 +1,10 @@
 from django.urls import path
 
 from users.api import *
+from link.api import *
 
 link_patterns = [
-
+	path('links/<str:code>/', LinkView.as_view(), name='api-links-link')
 ]
 
 users_patterns = [
