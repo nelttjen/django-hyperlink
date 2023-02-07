@@ -30,6 +30,8 @@ class LoginSerializer(serializers.Serializer):
 				raise ValidationError(_('Неверный логин или пароль'))
 			if not self.user.check_password(password):
 				raise ValidationError(_('Неверный логин или пароль'))
+			if not self.user.is_active:
+				raise ValidationError(_('На вашу почту было выслано письмо с кодом подтверждения'))
 		else:
 			raise ValidationError(_('Неверный логин или пароль'))
 		ban, msg = self.user.user.check_ban()

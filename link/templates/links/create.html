@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load my_tags %}
+{% block head %}
+    <script src="{% static "links/js/create.js" %}?reload={% random_int 1 999999 %}"></script>
+{% endblock %}
+{% block container %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" id="btn-save">Сохранить</button>
+
+    <style>
+    .info-error {
+        color: red;
+    }
+    .info-succ {
+        color: green;
+    }
+    </style>
+
+    <p id="info"></p>
+{% endblock %}

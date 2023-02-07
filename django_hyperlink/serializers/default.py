@@ -5,6 +5,7 @@ class DefaultSerializer(serializers.Serializer):
 	msg = serializers.CharField(default='')
 	content = serializers.JSONField(default=[])
 	extra = serializers.JSONField(default={})
+	errors = serializers.JSONField(default={})
 
 	@staticmethod
 	def get_error_message(serializer):

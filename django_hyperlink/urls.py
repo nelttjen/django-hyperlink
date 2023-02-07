@@ -1,12 +1,14 @@
 from django.contrib import admin
+from django.http import HttpResponsePermanentRedirect
 from django.urls import path, include, re_path
 from django_hyperlink.settings import API_PATH, API_FOLDER, DEBUG
 
 
 urlpatterns = [
+    path('admin/login/', lambda x: HttpResponsePermanentRedirect('/users/login')),
+    path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
 
-    path('admin/', admin.site.urls),
     path('', include('link.urls')),
 
     path(API_PATH, include(API_FOLDER))

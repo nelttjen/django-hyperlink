@@ -14,7 +14,7 @@ function on_submit(sender) {
     })
     .fail((response) => {
         response = get_response(response);
-        $('.status').text(response.msg);
+        $('.status').text(response.errors.msg);
     });
 }
 
