@@ -43,14 +43,11 @@ $(document).ready(function () {
         timer = response.content.redirect_timer;
         
         timer === 0 ? makeRedirect() : createTimer()
-
-        
-
     })
     .fail((response) => {
         response = get_response(response);
         let elem = $("h1#main-info")
         elem.removeAttr('style');
-        elem.text(response.msg)
+        elem.text(response.errors.msg)
     });
 });

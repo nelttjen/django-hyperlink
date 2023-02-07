@@ -13,7 +13,7 @@ function set_error(response) {
     response = get_response(response);
     validation_p.removeClass("validation_succ");
     validation_p.addClass("validation_error");
-    validation_p.text(response.msg);
+    validation_p.text(response.errors.msg);
     return response;
 }
 

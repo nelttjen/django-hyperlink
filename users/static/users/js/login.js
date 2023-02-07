@@ -23,8 +23,8 @@ function on_sublit_login(sender) {
         })
         .fail((response) => {
             response = get_response(response);
-            if (response.msg) {
-                $(".errors").text(response.msg);
+            if (response.errors.msg) {
+                $(".errors").text(response.errors.msg);
             } else $(".errors").text("Неправильный логин или пароль");
             
         });

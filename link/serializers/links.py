@@ -9,7 +9,9 @@ from link.models import ShareLink
 class ShareLinkSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
-        is_owner = kwargs.pop('is_owner')
+        is_owner = False
+        if 'is_owner' in kwargs.keys():
+            is_owner = kwargs.pop('is_owner')
         super().__init__(*args, **kwargs)
 
         self.Meta.fields = ['redirect_timer', 'redirect_to']
@@ -29,7 +31,7 @@ class ShareLinkSerializer(serializers.ModelSerializer):
 
         link = ShareLink.objects.filter(share_code=code).filter(
             ((Q(redirects__lt=F('allowed_redirects')) | Q(allowed_redirects=-1)) & Q(is_active=True) &
-             Q(valid_until__gt=timezone.now())) | Q(owner_id=request.user.id)
+             (Q(valid_until__gt=timezone.now()) | Q(valid_until__isnull=True))) | Q(owner_id=request.user.id)
         ).first()
 
         return link
@@ -47,3 +49,10 @@ class ShareLinkSerializer(serializers.ModelSerializer):
 
         update_link_redirects.delay(link.id, user_id, ip, is_unique=link.only_unique_redirects)
         return True
+
+
+class ShareLinkCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShareLink
+        fields = '__all__'

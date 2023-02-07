@@ -1,5 +1,5 @@
-from .links import LinkView, ShareLinkSerializer
+from .links import LinkView, LinkCreateView, ShareLinkSerializer
 
 __all__ = (
-    'LinkView', 'ShareLinkSerializer'
+    'LinkView', 'LinkCreateView', 'ShareLinkSerializer'
 )

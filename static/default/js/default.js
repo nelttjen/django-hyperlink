@@ -39,8 +39,8 @@ function get_response(response) {
 
 function get_auth() {
     let token = getCookie("Token");
-    let headers = {
-        "Authorization": `${AUTH_TYPE} ${token}`
-    };
+    
+    let headers = token ? {"Authorization": `${AUTH_TYPE} ${token}`} : {}
     return headers;
 }
+

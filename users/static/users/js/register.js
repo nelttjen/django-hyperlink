@@ -29,7 +29,7 @@ function register_submit(sender) {
     })
     .fail((response) => {
         response = get_response(response);
-        $(".error").text(response.msg);
+        $(".error").text(response.errors.msg);
     });
 }   
 

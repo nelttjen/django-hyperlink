@@ -16,9 +16,17 @@ def update_link_redirects(link_id, user_id, ip=None, is_unique=False):
         filt = Q(ip_address=ip) & Q(ip_address__isnull=False)
 
         if user_id:
-            filt = Q(user_id=user_id) & Q(user_id__isnull=False)
+            filt = (Q(ip_address=ip) & Q(ip_address__isnull=False)) | (Q(user_id=user_id) & Q(user_id__isnull=False))
 
-        exists = LinkRedirect.objects.filter(filt).exists()
+        queryset = LinkRedirect.objects.filter(filt)
+        if user_id:
+            redirect = queryset.first()
+            if redirect.ip_address and not redirect.user_id:
+                queryset.select_for_update().update(user_id=user_id)
+            exists = redirect
+        else:
+            exists = queryset.exists()
+
         update = not exists
     else:
         exists = False

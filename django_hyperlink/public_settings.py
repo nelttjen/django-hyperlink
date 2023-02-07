@@ -52,6 +52,10 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django_hyperlink.authentication.CustomTokenAuth'
+]
+
 ROOT_URLCONF = 'django_hyperlink.urls'
 
 TEMPLATES = [
