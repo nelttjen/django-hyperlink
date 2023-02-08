@@ -114,4 +114,4 @@ class SocialStateCodes(models.Model):
 def user_created(sender, instance, created, **kwargs):
 	if created:
 		Profile.objects.create(user=instance, display_name=instance.username)
-	instance.user.save()
+	instance.profile.save()
