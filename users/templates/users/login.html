@@ -6,14 +6,17 @@
 {% endblock %}
 {% block container %}
     <p style="color: green; padding: 10px; border: 1px solid green; width: fit-content" class="done-msg"> {{ message }}</p>
-<div class="mb-3">
-    <label for="username" class="form-label">Username</label>
-    <input type="text" class="form-control" id="username">
-  </div>
-  <div class="mb-3">
-    <label for="password" class="form-label">Password</label>
-    <input type="password" class="form-control" id="password">
-  </div>
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username">
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password">
+    </div>
   <button class="btn btn-primary" id="button-login">Submit</button>
-    <div class="errors" style="color:red;"></div>
+  <div class="errors" style="color:red;"></div>
+  <div class="socials" style="padding: 15px">
+      <a href="/users/login/socials/?provider=vk"><img src="https://mntkcheb.ru/sites/default/files/pictures/vk-circle.png" alt="vk" width="32px" height="32px"></a>
+  </div>  
 {% endblock %}

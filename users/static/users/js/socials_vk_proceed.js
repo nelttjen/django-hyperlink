@@ -7,11 +7,11 @@ function process_login() {
     let redirect_to  = DOMAIN + '/users/login/socials/vk/process/';
     let redirect_after = DOMAIN + '/new/'
 
-console.log(code);
-console.log(state);
-
     if (!code || !state){
         $("#error").text("Что-то пошло не так. Попробуйте ещё раз.");
+        $('#error').removeClass('succ');
+        $('#error').addClass('err');
+        return;
     }
 
     $.ajax({
@@ -29,6 +29,8 @@ console.log(state);
         response = get_response(response);
 
         $("#error").text(response.errors.msg);
+        $('#error').removeClass('succ');
+        $('#error').addClass('err');
     });
 }
 
