@@ -1,7 +1,6 @@
 from re import compile
 
-from django.contrib.auth.models import User as DjangoUser
-from rest_framework.authtoken.admin import User as RestUser
+from django.contrib.auth.models import User
 from rest_framework.serializers import ModelSerializer, ValidationError
 
 from users.modules import Email, PasswordValidator
@@ -9,7 +8,7 @@ from users.modules import Email, PasswordValidator
 
 class RegisterSerializer(ModelSerializer):
 	class Meta:
-		model = RestUser
+		model = User
 		fields = (
 			'username',
 			'email',
@@ -31,9 +30,9 @@ class RegisterSerializer(ModelSerializer):
 			                      'содержать в себе только буквы латинского алфавита, а также символы _-')
 		if isinstance(error := password_validator.validate(), str):
 			raise ValidationError(error)
-		if DjangoUser.objects.filter(username__iexact=username).first():
+		if User.objects.filter(username__iexact=username).first():
 			raise ValidationError('Имя пользователя уже занято')
-		if DjangoUser.objects.filter(email__iexact=email).first():
+		if User.objects.filter(email__iexact=email).first():
 			raise ValidationError('Email уже используется')
 		return self.initial_data
 
@@ -41,7 +40,7 @@ class RegisterSerializer(ModelSerializer):
 		username = validated_data.get('username')
 		password = validated_data.get('password')
 		email = validated_data.get('email')
-		user = DjangoUser.objects.create_user(
+		user = User.objects.create_user(
 			username=username,
 			password=password,
 			email=email

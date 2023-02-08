@@ -17,7 +17,7 @@ function on_sublit_login(sender) {
         })
         .done((response) => {
             response = get_response(response);
-            setCookie("Token", response.content.token, 365);
+            setCookie("token", response.content.token, 365);
             $(".done-msg").text("Авторизация успешна");
             $(".errors").text("");
 

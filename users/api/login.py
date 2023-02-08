@@ -30,7 +30,7 @@ class LoginView(APIView):
         serializer = self.serializer_class(data=request.data, request=request)
         if not serializer.is_valid():
             raise ParseError(DefaultSerializer.get_error_message(serializer))
-        result = serializer.login()
+        result = serializer.login(request)
         return Response(DefaultSerializer({
             'msg': "ok",
             'content': result

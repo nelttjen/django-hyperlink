@@ -1,8 +1,8 @@
 from django.db.models import Q
 from django.utils import timezone
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.authtoken.admin import User as RestUser
 
 from users.models import ActivateCode
 from users.tasks.user_code import recovery_user
@@ -21,7 +21,7 @@ class RecoverySerializer(serializers.Serializer):
 			email = self.initial_data.get('email', None)
 			if not any([username, email]):
 				raise ValidationError('Данные не предоставлены')
-			if not (user := RestUser.objects.filter(Q(username__iexact=username) | Q(email__iexact=email)).first()):
+			if not (user := User.objects.filter(Q(username=username) | Q(email=email)).first()):
 				raise ValidationError('Пользователь не найден')
 			self.user = user
 		elif self.method == 'put':
