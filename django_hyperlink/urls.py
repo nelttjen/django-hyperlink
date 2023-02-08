@@ -5,7 +5,7 @@ from django_hyperlink.settings import API_PATH, API_FOLDER, DEBUG
 
 
 urlpatterns = [
-    path('admin/login/', lambda x: HttpResponsePermanentRedirect('/users/login')),
+    path('admin/login/', lambda x: HttpResponsePermanentRedirect('/users/login/?next=/admin')),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
 

@@ -28,9 +28,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework.authtoken',
     'drf_yasg',
     'corsheaders',
+
+    'oauth2_provider',
 
     # Apps
     'link.apps.LinkConfig',
@@ -46,15 +47,41 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+
+    'django_hyperlink.middleware.OAuth2TokenMiddleware',
+    'django_hyperlink.middleware.CheckAuthMiddleware',
+
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'django_hyperlink.authentication.CustomTokenAuth'
+    'django_hyperlink.backends.APIAuth',
 ]
+
+# REST
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'django_hyperlink.backends.OAuth2Authentication',
+        'django_hyperlink.backends.APIAuth',
+    ],
+    'EXCEPTION_HANDLER': 'django_hyperlink.exceptions.custom_exception_handler',
+}
+
+# OAUTH
+OAUTH2_PROVIDER = {
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
+    'SCOPES': {'all': 'all'},
+}
+OAUTH2_DEFAULT_APP = 1
+
+
+# Social
+SOCIAL_AUTH_VK_OAUTH2_KEY = os.environ.get('VK_KEY', '')
+SOCIAL_AUTH_VK_OAUTH2_SECRET = os.environ.get('VK_SECRET', '')
 
 ROOT_URLCONF = 'django_hyperlink.urls'
 
@@ -165,13 +192,6 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 
-# REST
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'django_hyperlink.authentication.CustomTokenAuth',
-    ],
-    'EXCEPTION_HANDLER': 'django_hyperlink.exceptions.custom_exception_handler',
-}
 
 # DRF_YASG
 SWAGGER_SETTINGS = {

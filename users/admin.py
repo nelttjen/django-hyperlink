@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from users.models import ActivateCode, User, DjangoUser
+from users.models import ActivateCode, Profile, DjangoUser
 
 # Register your models here.
 
@@ -12,9 +12,10 @@ class ActivateCodeAdmin(admin.ModelAdmin):
 	readonly_fields = ('activated_date', 'is_used', 'expired_date', 'code')
 
 
-@admin.register(User)
+@admin.register(Profile)
 class CustomUserAdmin(admin.ModelAdmin):
 	readonly_fields = ('user',)
+	# pass
 
 
 class DjangoAdminUser(admin.ModelAdmin):
