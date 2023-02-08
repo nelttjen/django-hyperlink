@@ -179,7 +179,7 @@ class SocialAuth:
 		vk_id = data.get('id')
 
 		if not email:
-			email = data[0].get('email')
+			email = data.get('email')
 			if not email:
 				return False
 
