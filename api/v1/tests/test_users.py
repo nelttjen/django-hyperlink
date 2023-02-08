@@ -14,7 +14,7 @@ from rest_framework.test import RequestsClient
 from django_hyperlink.settings import DOMAIN, DATABASES
 from users.api import *
 from users.tasks import *
-from users.models import User as CustomUser, ActivateCode
+from users.models import Profile as CustomUser, ActivateCode
 from users.modules import PasswordValidator
 from .test_items_base import TestItemsBase
 

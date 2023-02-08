@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load my_tags %}
+{% block head %}
+    <script src="{% static "users/js/socials_vk_proceed.js" %}?reload={% random_int 1 999999 %}"></script>
+{% endblock %}
+{% block container %}
+    <h1 style="color: red;" id="error"></h1>
+{% endblock %}

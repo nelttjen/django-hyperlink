@@ -1,6 +1,7 @@
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.utils import timezone
+from oauth2_provider.models import AccessToken
 
 from django_hyperlink.settings import EMAIL_HOST_USER, DEBUG
 from django_hyperlink.celery import celery_app
@@ -30,5 +31,7 @@ def recovery_user(code_id, user_id, password):
     user = User.objects.filter(id=user_id).first()
     user.set_password(password)
     user.save()
+
+    AccessToken.objects.filter(user_id=user.id).delete()
 
     return True

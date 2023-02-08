@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect as redirect
 from django.contrib.auth import logout as logout_user
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework.authtoken.models import Token
+from oauth2_provider.models import AccessToken
 
 
 def test(request):
@@ -32,10 +32,18 @@ def recovery(request):
 
 
 def logout(request):
-    if token := request.COOKIES.get('Token'):
-        if token := Token.objects.filter(key=token).first():
+    if token := request.COOKIES.get('token'):
+        if token := AccessToken.objects.filter(token=token).first():
             token.delete()
             logout_user(request)
     response = redirect(reverse('users-login') + '?message=Вы вышли с аккаунта')
-    response.delete_cookie('Token')
+    response.delete_cookie('token')
     return response
+
+
+def socials(request):
+    return render(request, 'users/socials.html')
+
+
+def socials_vk(request):
+    return render(request, 'users/socials_vk_proceed.html')

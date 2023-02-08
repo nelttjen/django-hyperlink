@@ -8,11 +8,11 @@ from django.utils import timezone
 
 
 def user_ban_json():
-	return User.ban_json
+	return Profile.ban_json
 
 
 # Create your models here.
-class User(models.Model):
+class Profile(models.Model):
 	ban_json = {
 		'is_banned': False,
 		'ban_until': None,
@@ -26,12 +26,15 @@ class User(models.Model):
 
 	user = models.OneToOneField(verbose_name='Джанго юзер', to=DjangoUser, on_delete=models.CASCADE)
 
+	display_name = models.CharField(verbose_name='Никнейм на сайте', max_length=50)
+	vk_id = models.BigIntegerField(verbose_name='Привязаный вк', null=True, blank=True, default=None)
+
 	ban = models.JSONField(verbose_name='Информация о бане', default=user_ban_json)
 
 	class Meta:
-		verbose_name = 'Пользователь'
-		verbose_name_plural = 'Пользователи'
-		db_table = 'custom_users'
+		verbose_name = 'Профиль пользователя'
+		verbose_name_plural = 'Профили пользователей'
+		db_table = 'users_profiles'
 
 	def check_ban(self):
 		if self.ban['is_banned']:
@@ -92,8 +95,23 @@ class ActivateCode(models.Model):
 		return f'Код пользователя {self.user.username}'
 
 
+class SocialStateCodes(models.Model):
+	SESSION_LIFE = 300
+
+	owner = models.ForeignKey(verbose_name='user', to=DjangoUser, null=True, on_delete=models.CASCADE)
+	state = models.CharField(verbose_name='secret code', max_length=20)
+	ip = models.GenericIPAddressField(verbose_name='user ip')
+	expires = models.DateTimeField(verbose_name='session')
+
+	def is_expired(self):
+		return self.expires < timezone.now()
+
+	def set_expire(self):
+		self.expires = timezone.now() + datetime.timedelta(seconds=self.SESSION_LIFE)
+
+
 @receiver(signal=models.signals.post_save, sender=DjangoUser)
 def user_created(sender, instance, created, **kwargs):
 	if created:
-		User.objects.create(user=instance)
+		Profile.objects.create(user=instance, display_name=instance.username)
 	instance.user.save()
