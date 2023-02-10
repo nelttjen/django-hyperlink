@@ -39,7 +39,7 @@ function on_submit(sender) {
         
 
         link = window.location.href.replace("/new/", "");
-        link = `${link}/${response.share_code}`;
+        link = `${link}/${response.content.share_code}`;
 
         elem.html(`Ваша ссылка готова: <a href="${link}">${link}</a> <button class="btn btn-primary" id="btn-copy">Скопировать</button>`);
         

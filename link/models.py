@@ -13,10 +13,10 @@ class ShareLink(models.Model):
     )
 
     owner = models.ForeignKey(verbose_name='Владелец', to=User, on_delete=models.CASCADE, default=None, null=True)
-    share_code = models.CharField(verbose_name='Код', max_length=30)
+    share_code = models.CharField(verbose_name='Код', max_length=30, unique=True)
     redirect_timer = models.PositiveIntegerField(verbose_name='Время до редиректа', default=5, choices=redirect_time_choices)
     redirect_to = models.URLField(verbose_name='Куда ведет ссылка')
-    valid_until = models.DateTimeField(verbose_name='Истекает', null=True, default=None)
+    valid_until = models.DateTimeField(verbose_name='Истекает', null=True, blank=True, default=None)
     allowed_redirects = models.IntegerField(verbose_name='Максимум редиректов', default=-1)
     redirects = models.IntegerField(verbose_name='Количество редиректов', default=0)
     date_created = models.DateTimeField(verbose_name='Дата созания', auto_now_add=True)

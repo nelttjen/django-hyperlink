@@ -3,9 +3,10 @@ function process_login() {
     const url = new URL(window.location.href);
     let code = url.searchParams.get("code");
     let state = url.searchParams.get("state");
+    let redirect_next = url.searchParams.get("next");
     let provider = 'vk';
-    let redirect_to  = DOMAIN + '/users/login/socials/vk/process/';
-    let redirect_after = DOMAIN + '/new/'
+    let redirect_to = redirect_next ? DOMAIN + `/users/login/socials/vk/process/?next=${redirect_next}` : DOMAIN + '/users/login/socials/vk/process/';
+    let redirect_after = redirect_next ? DOMAIN + redirect_next : DOMAIN + '/new/'
 
     if (!code || !state){
         $("#error").text("Что-то пошло не так. Попробуйте ещё раз.");

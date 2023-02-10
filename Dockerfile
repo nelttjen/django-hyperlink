@@ -15,3 +15,5 @@ COPY . /app
 
 ENV PORT=8000
 EXPOSE $PORT
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

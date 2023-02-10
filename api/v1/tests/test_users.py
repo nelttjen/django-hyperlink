@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 from django.urls import resolve, reverse
 from django.contrib.auth.models import User
 from django.utils import timezone
-from rest_framework.authtoken.models import Token
+from oauth2_provider.models import AccessToken
 from rest_framework.test import RequestsClient
 
 from django_hyperlink.settings import DOMAIN, DATABASES
@@ -430,9 +430,9 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
 
         self.assertEqual(response.status_code, 200)
 
-        token = Token.objects.filter(user_id=user.id).first()
+        token = AccessToken.objects.filter(user_id=user.id).first()
 
-        self.assertEqual(response.json()['content']['token'], token.key)
+        self.assertEqual(response.json()['content']['token'], token.token)
         self.assertEqual(response.json()['content']['username'], user.username)
 
     def test_user_login_by_email(self):
@@ -454,9 +454,9 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
 
         self.assertEqual(response.status_code, 200)
 
-        token = Token.objects.filter(user_id=user.id).first()
+        token = AccessToken.objects.filter(user_id=user.id).first()
 
-        self.assertEqual(response.json()['content']['token'], token.key)
+        self.assertEqual(response.json()['content']['token'], token.token)
         self.assertEqual(response.json()['content']['username'], user.username)
 
     def test_user_login_banned(self):
@@ -478,8 +478,8 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         response = client.post(url, data=data)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('заблокирован', response.json()['msg'].lower())
-        self.assertIn('навсегда', response.json()['msg'].lower())
+        self.assertIn('заблокирован', response.json()['errors']['msg'].lower())
+        self.assertIn('навсегда', response.json()['errors']['msg'].lower())
 
         custom_user.ban = {'is_banned': True,
                            'ban_until': datetime.datetime(day=20, month=2, year=2028).timestamp(),
@@ -488,8 +488,8 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
 
         response = client.post(url, data=data)
         self.assertEqual(response.status_code, 400)
-        self.assertIn('заблокирован', response.json()['msg'].lower())
-        self.assertIn('20.02.2028', response.json()['msg'].lower())
+        self.assertIn('заблокирован', response.json()['errors']['msg'].lower())
+        self.assertIn('20.02.2028', response.json()['errors']['msg'].lower())
 
         custom_user.ban = custom_user.ban_json
         custom_user.save()

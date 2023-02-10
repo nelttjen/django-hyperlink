@@ -6,7 +6,7 @@ from django.http import QueryDict
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView, UpdateAPIView
-from rest_framework.exceptions import ParseError, NotAuthenticated
+from rest_framework.exceptions import ParseError, NotAuthenticated, ValidationError
 from rest_framework.response import Response
 from rest_framework import permissions
 from drf_yasg.utils import swagger_auto_schema
@@ -47,6 +47,24 @@ class LinkCreateView(CreateAPIView, UpdateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = ShareLinkCreateSerializer
 
+    def _random_code(self):
+        return ''.join([random.choice(string.ascii_letters + string.digits) for _ in range(10)])
+
+    def _perform_create(self, request, *args, **kwargs):
+        try:
+            response = self.create(request, *args, **kwargs)
+        except ValidationError as e:
+            detail = e.get_full_details()
+            if 'share_code' not in detail.keys():
+                raise e
+            if not (len(detail['share_code']) == 1 and detail['share_code'][0]['code'] == 'unique'):
+                raise e
+
+            request.data['share_code'] = self._random_code()
+            response = self._perform_create(request, *args, **kwargs)
+
+        return response
+
     def post(self, request, *args, **kwargs):
         if isinstance(request.data, QueryDict):
             request.data._mutable = True
@@ -64,20 +82,23 @@ class LinkCreateView(CreateAPIView, UpdateAPIView):
             if key in exclude:
                 request.data.pop(key)
 
-        request.data['share_code'] = ''.join([random.choice(string.ascii_letters + string.digits) for _ in range(10)])
+        # request.data['share_code'] = self._random_code()
+        request.data['share_code'] = 'test'
 
         def none_int(x): return int(x) if x is not None else None
 
-        if (valid := none_int(request.data.get('valid_until', 7))) not in (1, 7, 30, None):
+        if (valid := none_int(request.data.get('valid_until', 7))) not in (1, 7, 30, -1):
             from django.utils.translation import gettext_lazy as _
             raise ParseError(_('Ссылка должна быть действительна в течении  1, 7 или 30 дней или быть бессрочной'))
 
-        request.data['valid_until'] = timezone.now() + datetime.timedelta(days=valid) if valid else None
+        request.data['valid_until'] = timezone.now() + datetime.timedelta(days=valid) if valid != -1 else None
 
         if 'is_active' not in request.data:
             request.data['is_active'] = True
 
-        return self.create(request, *args, **kwargs)
+        response = self._perform_create(request, *args, **kwargs)
+
+        return Response(DefaultSerializer({'content': response.data}).data)
 
     def put(self, request, *args, **kwargs):
         if request.user.is_authenticated:
