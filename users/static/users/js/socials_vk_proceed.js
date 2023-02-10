@@ -3,15 +3,16 @@ function process_login() {
     const url = new URL(window.location.href);
     let code = url.searchParams.get("code");
     let state = url.searchParams.get("state");
+    let redirect_next = url.searchParams.get("next");
     let provider = 'vk';
-    let redirect_to  = DOMAIN + '/users/login/socials/vk/process/';
-    let redirect_after = DOMAIN + '/new/'
-
-console.log(code);
-console.log(state);
+    let redirect_to = redirect_next ? DOMAIN + `/users/login/socials/vk/process/?next=${redirect_next}` : DOMAIN + '/users/login/socials/vk/process/';
+    let redirect_after = redirect_next ? DOMAIN + redirect_next : DOMAIN + '/new/'
 
     if (!code || !state){
         $("#error").text("Что-то пошло не так. Попробуйте ещё раз.");
+        $('#error').removeClass('succ');
+        $('#error').addClass('err');
+        return;
     }
 
     $.ajax({
@@ -29,6 +30,8 @@ console.log(state);
         response = get_response(response);
 
         $("#error").text(response.errors.msg);
+        $('#error').removeClass('succ');
+        $('#error').addClass('err');
     });
 }
 

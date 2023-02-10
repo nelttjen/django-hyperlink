@@ -84,12 +84,12 @@ class Auth:
 				scope='all'
 			)
 
-			RefreshToken.objects.create(
-				user=self.user,
-				access_token_id=new.id,
-				application_id=app.id,
-				token=random_token_generator(self.request),
-			)
+			# RefreshToken.objects.create(
+			# 	user=self.user,
+			# 	access_token_id=new.id,
+			# 	application_id=app.id,
+			# 	token=random_token_generator(self.request),
+			# )
 		except Application.DoesNotExist:
 			new = AccessToken.objects.create(
 				user=self.user,
@@ -179,7 +179,7 @@ class SocialAuth:
 		vk_id = data.get('id')
 
 		if not email:
-			email = data[0].get('email')
+			email = data.get('email')
 			if not email:
 				return False
 

@@ -13,7 +13,11 @@ def test(request):
 
 def login(request):
     message = request.GET.get('message', '')
-    return render(request, 'users/login.html', {'message': message})
+    vk_link = reverse('socials') + '?provider=vk'
+    if redirect_location := request.GET.get('next'):
+        vk_link += f'&next={redirect_location}'
+
+    return render(request, 'users/login.html', {'message': message, 'vk_link': vk_link})
 
 
 def register(request):

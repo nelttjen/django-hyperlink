@@ -1,6 +1,9 @@
-from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
+import datetime
 
+from django.contrib.auth.models import User
+from django.utils import timezone
+# from rest_framework.authtoken.models import Token
+from oauth2_provider.models import AccessToken as Token
 
 class TestItemsBase:
     def create_users(self):
@@ -24,16 +27,22 @@ class TestItemsBase:
         )
 
         self.superuser_token = Token.objects.create(
-            user_id=self.superuser.id,
-            key=self.superuser.username,
+            user=self.superuser,
+            token=self.superuser.username,
+            expires=timezone.now() + datetime.timedelta(days=365),
+            scope='all',
         )
 
         self.staff_user_token = Token.objects.create(
-            user_id=self.staff_user.id,
-            key=self.staff_user.username,
+            user=self.staff_user,
+            token=self.staff_user.username,
+            expires=timezone.now() + datetime.timedelta(days=365),
+            scope='all',
         )
 
         self.common_user_token = Token.objects.create(
-            user_id=self.common_user.id,
-            key=self.common_user.username,
+            user=self.common_user,
+            token=self.common_user.username,
+            expires=timezone.now() + datetime.timedelta(days=365),
+            scope='all',
         )

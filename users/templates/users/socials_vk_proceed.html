@@ -5,5 +5,14 @@
     <script src="{% static "users/js/socials_vk_proceed.js" %}?reload={% random_int 1 999999 %}"></script>
 {% endblock %}
 {% block container %}
-    <h1 style="color: red;" id="error"></h1>
+    <style>
+    h1.succ {
+        color: green;
+    }
+    h1.err {
+        color: red;
+    }
+
+    </style>
+    <h1 id="error" class="succ">Авторизация...</h1>
 {% endblock %}

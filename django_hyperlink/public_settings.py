@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'corsheaders',
+    'storages',
 
     'oauth2_provider',
 
@@ -61,6 +62,8 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = [
     'django_hyperlink.backends.APIAuth',
 ]
+
+LOGOUT_REDIRECT_URL = '/users/logout/'
 
 # REST
 REST_FRAMEWORK = {
@@ -154,17 +157,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'link/static',
-    BASE_DIR / 'users/static',
-    BASE_DIR / 'static'
-]
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
@@ -207,17 +199,6 @@ SWAGGER_SETTINGS = {
     }
 }
 
-# DEBUG TOOLBAR
-DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': 'django_hyperlink.middleware.show_toolbar',
-    'INTERNAL_IPS': [
-        "localhost",
-        "localhost:8000",
-        "127.0.0.1",
-        '127.0.0.1:8000'
-    ]
-}
-
 # CORS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost",
@@ -227,3 +208,17 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
     'http://127.0.0.1:8000',
 ]
+
+# AWS
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+AWS_STORAGE_BUCKET_NAME = 'dj-hyperlink-bucket'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.eu-central-1.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+}
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+DEFAULT_FILE_STORAGE = 'django_hyperlink.modules.storage.MediaStorage'

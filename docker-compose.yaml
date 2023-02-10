@@ -32,6 +32,21 @@ services:
     depends_on:
       - postgres_db
 
+  django-collectstatic:
+    build: .
+    volumes:
+      - .:/app/
+    image: docker-app:django
+    container_name: django-collectstatic
+    depends_on:
+      - postgres_db
+      - django-migrate
+    command:
+      - python
+      - manage.py
+      - collectstatic
+      - --noinput
+
   # django app
   django:
     build: .
@@ -41,7 +56,6 @@ services:
       - "8000:8000"
     image: docker-app:django
     container_name: django
-    command: python manage.py runserver 0.0.0.0:8000
     depends_on:
       - postgres_db
       - django-migrate

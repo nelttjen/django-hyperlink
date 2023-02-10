@@ -13,10 +13,11 @@ def update_link_redirects(link_id, user_id, ip=None, is_unique=False):
         return False
 
     if is_unique:
-        filt = Q(ip_address=ip) & Q(ip_address__isnull=False)
+        filt = (Q(ip_address=ip) & Q(ip_address__isnull=False)) & Q(link_id=link_id)
 
         if user_id:
-            filt = (Q(ip_address=ip) & Q(ip_address__isnull=False)) | (Q(user_id=user_id) & Q(user_id__isnull=False))
+            filt = ((Q(ip_address=ip) & Q(ip_address__isnull=False)) |
+                    (Q(user_id=user_id) & Q(user_id__isnull=False))) & Q(link_id=link_id)
 
         queryset = LinkRedirect.objects.filter(filt)
         if user_id:
