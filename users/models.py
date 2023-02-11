@@ -36,13 +36,18 @@ class Profile(models.Model):
     user = models.OneToOneField(verbose_name='Джанго юзер', to=DjangoUser, on_delete=models.CASCADE)
 
     # main
-    display_name = models.CharField(verbose_name='Никнейм на сайте', max_length=50)
-    avatar = models.ImageField(verbose_name='Аватар', upload_to=get_file_path, default='static/default/img/no-avatar.jpg',)
-    bio = models.TextField(verbose_name='О себе', blank=True)
+    display_name = models.CharField(verbose_name='Никнейм на сайте', max_length=50, db_index=True)
+    avatar = models.ImageField(verbose_name='Аватар', upload_to=get_file_path, default='static/default/img/no-avatar.jpg')
     title = models.CharField(verbose_name='Заголовок профиля', max_length=150, blank=True)
+    bio = models.TextField(verbose_name='О себе', blank=True)
+
+    # moderation
+    last_seen = models.DateTimeField(verbose_name='Последний раз в сети')
+    last_ip = models.GenericIPAddressField(verbose_name='Последний IP адрес')
+    ban = models.JSONField(verbose_name='Информация о бане', default=user_ban_json)
 
     # socials
-    vk_id = models.BigIntegerField(verbose_name='Привязаный вк', null=True, blank=True, default=None, unique=True)
+    vk_id = models.BigIntegerField(verbose_name='Привязаный вк', null=True, blank=True, default=None, unique=True, db_index=True)
 
     # statistics
     total_redirects = models.PositiveIntegerField(verbose_name='Кол-во переходов по ссылкам', default=0)
@@ -52,7 +57,7 @@ class Profile(models.Model):
     daily_redirected = models.PositiveIntegerField(verbose_name='Кол-во переходов пользователей по ссылкам за день', default=0)
 
     # other
-    ban = models.JSONField(verbose_name='Информация о бане', default=user_ban_json)
+    rewards = models.ManyToManyField(verbose_name='Награды', to='users.UserRewards', blank=True)
 
     class Meta:
         verbose_name = 'Профиль пользователя'
@@ -77,7 +82,7 @@ class Profile(models.Model):
         return False, 'збс'
 
     def __str__(self):
-        return self.user.username
+        return f'{self.display_name} ({self.user.username})'
 
     def delete_avatars(self):
         storage = MEDIA_STORAGE
@@ -118,13 +123,14 @@ class Profile(models.Model):
             elif not self.avatar:
                 self.delete_avatars()
 
+
 class UserNotifications(models.Model):
     actions = (
         (0, 'Переадресация'),
         (1, 'Подтверждение'),
     )
 
-    user = models.ForeignKey(verbose_name='Пользователь', to=DjangoUser, on_delete=models.CASCADE)
+    profile = models.ForeignKey(verbose_name='Пользователь', to='users.Profile', on_delete=models.CASCADE)
 
     title = models.CharField(verbose_name='Заголовок оповещения', max_length=100)
     text = models.TextField(verbose_name='Текст оповещения', blank=True)
@@ -146,6 +152,12 @@ class UserRewards(models.Model):
     name = models.CharField(verbose_name='Название', max_length=100)
     rank = models.IntegerField(verbose_name='Ранг', choices=ranks, default=0)
     image = models.ImageField(verbose_name='Иконка', upload_to=MEDIA_STORAGE)
+
+
+class UserHistory(models.Model):
+    profile = models.ForeignKey(verbose_name='Профиль', to='users.Profile', on_delete=models.CASCADE)
+    ip = models.GenericIPAddressField(verbose_name='Айпи', db_index=True)
+    count = models.IntegerField(verbose_name='Кол-во входов', default=0)
 
 
 class ActivateCode(models.Model):

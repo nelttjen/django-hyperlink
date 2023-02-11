@@ -119,7 +119,7 @@ class Auth:
 	def authenticate_user(self, username, password):
 		if not username or not password:
 			return 'Не переданы данные для авторизации'
-		user = User.objects.filter(Q(username=username) | Q(email=username)).first()
+		user = User.objects.filter(Q(username=username) | Q(email=username)).select_related('profile').first()
 		if not user:
 			return 'Неверный логин или пароль'
 		if not user.check_password(password):
@@ -208,7 +208,17 @@ class SocialAuth:
 			**{field: data[field]}
 		).select_related('user').first()
 
+		ban, msg = user.check_ban()
+		if ban:
+			return msg
+
 		if not user:
 			return None, data
 
 		return user.user, data
+
+
+def get_ip(request):
+	return request.META.get('HTTP_CF_CONNECTING_IP') or \
+           request.META.get('REMOTE_HOST') or \
+           request.META.get('REMOTE_ADDR')

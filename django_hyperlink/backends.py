@@ -1,3 +1,4 @@
+from django.utils import timezone
 from oauth2_provider.oauth2_backends import get_oauthlib_core
 from rest_framework.authentication import BaseAuthentication
 from oauth2_provider.models import AccessToken
@@ -5,25 +6,27 @@ from rest_framework import exceptions
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 
+from users.models import Profile
+
 
 class APIAuth(BaseAuthentication):
 
     def authenticate(self, request, token=None, not_api=False):
         token = token or request.COOKIES.get('token')
-        access_token = AccessToken.objects.filter(token=token).order_by('-id')
 
-        if not access_token.exists():
+        if not token:
+            token = request.headers.get('Authorization', '').replace('Bearer ', '')
+
+        access_token = AccessToken.objects.filter(token=token).select_related('user', 'user__profile').order_by('-id').first()
+
+        if not access_token:
             return None
-
-        access_token = access_token.first()
 
         if access_token.is_expired():
             return None
 
-        try:
-            user = User.objects.get(pk=access_token.user_id)
-        except User.DoesNotExist:
-            raise exceptions.AuthenticationFailed(_('Пользователь не найден'))
+        user = access_token.user
+        update_last_seen(user)
 
         if not_api:
             return user
@@ -51,7 +54,9 @@ class OAuth2Authentication(BaseAuthentication):
         valid, r = oauthlib_core.verify_request(request, scopes=[])
 
         if valid:
-            return r.user, r.access_token
+            user = User.objects.filter(pk=r.user.pk).select_related('profile').first()
+            update_last_seen(user)
+            return user, r.access_token
 
         request.oauth2_error = getattr(r, 'oauth2_error', {})
 
@@ -70,3 +75,14 @@ class OAuth2Authentication(BaseAuthentication):
         )
 
         return f'Bearer {self._dict_to_string(www_authenticate_attributes)}'
+
+
+def update_last_seen(user):
+    try:
+        profile_id = user.profile.id
+    except:
+        pass
+    else:
+        Profile.objects.filter(id=profile_id).select_for_update().update(
+            last_seen=timezone.now()
+        )

@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 
-    'django_hyperlink.middleware.OAuth2TokenMiddleware',
+    # 'django_hyperlink.middleware.OAuth2TokenMiddleware',
     'django_hyperlink.middleware.CheckAuthMiddleware',
 
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -193,7 +193,7 @@ SWAGGER_SETTINGS = {
         },
         'Token': {
             'type': 'apiKey',
-            'name': 'Authorization: Token <token>',
+            'name': 'Authorization: Bearer <token>',
             'in': 'header'
         }
     }

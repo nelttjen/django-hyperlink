@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from users.serializers.profile import CurrentUserProfileSerializer
 from users.modules import Auth
 
 
@@ -23,4 +24,4 @@ class LoginSerializer(serializers.Serializer):
 	def login(self, request):
 		self.auth.request = request
 		token = self.auth.authenticate()
-		return {'token': token, 'username': self.auth.user.username}
+		return {'token': token, 'profile': CurrentUserProfileSerializer(self.auth.user.profile).data}

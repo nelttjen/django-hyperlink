@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from link.tasks.links import update_link_redirects
 from link.models import ShareLink
+from users.modules import get_ip
 
 
 class ShareLinkSerializer(serializers.ModelSerializer):
@@ -38,10 +39,7 @@ class ShareLinkSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def redirect(request, code):
-        ip = request.META.get('HTTP_CF_CONNECTING_IP') or \
-             request.META.get('REMOTE_HOST') or \
-             request.META.get('REMOTE_ADDR')
-
+        ip = get_ip(request)
         user_id = request.user.id if request.user.is_authenticated else None
 
         if not (link := ShareLink.objects.filter(share_code=code).only('id', 'only_unique_redirects').first()):

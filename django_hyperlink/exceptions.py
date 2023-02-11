@@ -10,11 +10,15 @@ def custom_exception_handler(exc, context):
 		if not isinstance(exc, ValidationError):
 			response.data = DefaultSerializer({'errors': {'msg': str(exc)}}).data
 		else:
-			errors = {'msg': 'extended'}
+			errors = {'details': False}
 			for key in exc.detail:
-				detail = {'string': exc.detail[key][0], 'code': exc.detail[key][0].code}
+				if key == 'non_field_errors':
+					errors['msg'] = exc.detail[key][0]
+				else:
+					errors['details'] = True
+					detail = {'string': exc.detail[key][0], 'code': exc.detail[key][0].code}
+					errors[key] = detail
 
-				errors[key] = detail
 			response.data = DefaultSerializer({'errors': errors}).data
 
 	return response

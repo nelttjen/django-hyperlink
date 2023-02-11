@@ -5,21 +5,16 @@ from rest_framework.exceptions import ParseError
 from rest_framework import permissions
 
 from django_hyperlink.serializers.default import DefaultSerializer
-from users.modules import SocialAuth as AuthProvider, Auth
+from users.modules import SocialAuth as AuthProvider, Auth, get_ip
 from users.models import SocialStateCodes
 
 
 class SocialAuthView(APIView):
     permission_classes = (permissions.AllowAny, )
 
-    def _get_request_source(self, request):
-        return request.META.get('HTTP_CF_CONNECTING_IP') or \
-               request.META.get('REMOTE_HOST') or \
-               request.META.get('REMOTE_ADDR')
-
     def post(self, request):
         state = request.data.get('state')
-        ip = self._get_request_source(request)
+        ip = get_ip(request)
 
         state = SocialStateCodes.objects.filter(state=state, ip=ip).first()
         if not state or state.is_expired():
@@ -47,7 +42,7 @@ class SocialAuthView(APIView):
 
     def put(self, request):
         state = request.data.get('state')
-        ip = self._get_request_source(request)
+        ip = get_ip(request)
 
         if state:
             state = SocialStateCodes(

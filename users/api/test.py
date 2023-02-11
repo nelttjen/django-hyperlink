@@ -14,7 +14,7 @@ class TestView(APIView):
     @swagger_auto_schema()
     def post(self, request):
         print(request.headers)
-        print(request.user.id, request.user)
+        print(request.user.id, request.user, request.user.profile)
         return Response(DefaultSerializer({
             'msg': 'ok'
         }).data)
