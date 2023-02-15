@@ -208,12 +208,12 @@ class SocialAuth:
 			**{field: data[field]}
 		).select_related('user').first()
 
+		if not user:
+			return None, data
+
 		ban, msg = user.check_ban()
 		if ban:
 			return msg
-
-		if not user:
-			return None, data
 
 		return user.user, data
 

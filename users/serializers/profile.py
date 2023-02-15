@@ -1,12 +1,19 @@
+import base64
+
+from django.core.files.base import ContentFile
+from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
+from re import compile
 
 from users.models import Profile, DjangoUser
+from users.modules import PasswordValidator
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = DjangoUser
-        fields = ['username', 'email', 'date_joined']
+        fields = ['id', 'username', 'email', 'date_joined']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -32,3 +39,62 @@ class UserModeratorProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+
+
+class UpdateUserProfileSerializer(serializers.ModelSerializer):
+    avatar = serializers.CharField(max_length=10000000)
+    old_password = serializers.CharField(max_length=999)
+    new_password = serializers.CharField(max_length=999)
+    new_password2 = serializers.CharField(max_length=999)
+    unlink_vk = serializers.CharField(max_length=999)
+
+    def validate(self, data):
+        old_pass = data.get('old_password')
+        new_pass = data.get('new_password')
+        new_pass2 = data.get('new_password2')
+
+        username = data.get('username')
+
+        username_validator = compile(r'^[A-Za-z0-9_-]{3,20}$')
+
+        if old_pass and not (new_pass and new_pass2):
+            raise ValidationError(_('Введите и повторите новый пароль '))
+
+        if old_pass:
+            result = PasswordValidator(new_pass, new_pass2).validate()
+            if isinstance(result, str):
+                raise ValidationError(_(result))
+
+        if username and not username_validator.fullmatch(username):
+            raise ValidationError('Имя пользователя должно быть 3-20 символов и '
+                                  'содержать в себе только буквы латинского алфавита, а также символы _-')
+
+        return data
+
+    def update(self, instance, data):
+        old_pass = data.get('old_password')
+        new_pass = data.get('new_password')
+
+        if old_pass and new_pass:
+            if instance.user.check_password(old_pass):
+                instance.user.set_password(new_pass)
+                instance.user.save(update_fields=['password', ])
+                del data['old_password']
+                del data['new_password']
+            else:
+                raise ValidationError(_('Старый пароль введен неверно'))
+
+        if data.get('avatar'):
+            __, imgstr = data.get('avatar').split(';base64,')
+            data['avatar'] = ContentFile(base64.b64decode(imgstr), name='temp.jpg')
+
+        if data.get('unlink_vk'):
+            instance.vk_id = None
+
+        super().update(instance, data)
+
+        return instance
+
+    class Meta:
+        model = Profile
+        fields = ('avatar', 'old_password', 'new_password', 'new_password2', 'unlink_vk')

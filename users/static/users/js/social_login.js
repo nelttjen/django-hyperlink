@@ -16,6 +16,8 @@ function reidrect_to_auth() {
     const url = new URL(window.location.href);
     let provider = url.searchParams.get("provider");
     let redirect_next = url.searchParams.get("next");
+    let type = url.searchParams.get("link");
+    console.log(type);
     if (providers.indexOf(provider) == -1) {
         $("#error").text('Неизвестный тип авторизации');
         return;
@@ -28,10 +30,23 @@ function reidrect_to_auth() {
         if (redirect_next) {
             link = `https://oauth.vk.com/authorize?client_id=${app_id}&redirect_uri=http://127.0.0.1:8000/users/login/socials/vk/process/?next=${redirect_next}&scope=email&response_type=code&state=${state}`
         }
-
+        else if (type) {
+            link = `https://oauth.vk.com/authorize?client_id=${app_id}&redirect_uri=http://127.0.0.1:8000/users/login/socials/vk/process/?link=${type}&scope=email&response_type=code&state=${state}`
+        }
+        
+        let headers, endp = undefined;
+        if (!type) {
+            endp = `${ENDPOINT}/users/login/socials/`;
+            headers = {};
+        } else {
+            endp = `${ENDPOINT}/users/link_socials/`;
+            headers = get_auth();
+        }
+        
         $.ajax({
             type: "PUT",
-            url: `${ENDPOINT}/users/login/socials/`,
+            url: endp,
+            headers: headers,
             data: {state},
         });
         window.location.replace(link);

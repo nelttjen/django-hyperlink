@@ -87,10 +87,10 @@ class Profile(models.Model):
     def delete_avatars(self):
         storage = MEDIA_STORAGE
 
-        exists_images = storage.listdir(f'{MEDIA_URL}media/users/{self.pk}/')[1]
+        exists_images = storage.listdir(f'users/{self.pk}/')[1]
         for image in exists_images:
             if image.endswith('.jpg') and image.startswith(f'avatar_'):
-                storage.delete(os.path.join(f'{MEDIA_URL}users/{self.pk}/', image))
+                storage.delete(os.path.join(f'users/{self.pk}/', image))
 
     def save(self, *args, **kwargs):
         storage = MEDIA_STORAGE
