@@ -4,6 +4,7 @@ from rest_framework.authentication import BaseAuthentication
 from oauth2_provider.models import AccessToken
 from rest_framework import exceptions
 from django.utils.translation import gettext_lazy as _
+from django.core.cache import cache
 from django.contrib.auth.models import User
 
 from users.models import Profile
@@ -17,7 +18,11 @@ class APIAuth(BaseAuthentication):
         if not token:
             token = request.headers.get('Authorization', '').replace('Bearer ', '')
 
-        access_token = AccessToken.objects.filter(token=token).select_related('user', 'user__profile').order_by('-id').first()
+        access_token = cache.get_or_set(
+            f'token-{token}',
+            lambda: AccessToken.objects.filter(token=token).select_related('user', 'user__profile').order_by('-id').first(),
+            3600
+        )
 
         if not access_token:
             return None
@@ -54,7 +59,11 @@ class OAuth2Authentication(BaseAuthentication):
         valid, r = oauthlib_core.verify_request(request, scopes=[])
 
         if valid:
-            user = User.objects.filter(pk=r.user.pk).select_related('profile').first()
+            user = cache.get_or_set(
+                f'oauth-token-{r.access_token.token}',
+                lambda: User.objects.filter(pk=r.user.pk).select_related('profile').first(),
+                3600
+            )
             update_last_seen(user)
             return user, r.access_token
 

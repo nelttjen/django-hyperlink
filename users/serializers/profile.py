@@ -53,9 +53,9 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
         new_pass = data.get('new_password')
         new_pass2 = data.get('new_password2')
 
-        username = data.get('username')
+        username = data.get('display_name')
 
-        username_validator = compile(r'^[A-Za-z0-9_-]{3,20}$')
+        username_validator = compile(r'^[A-Za-zА-Яа-яёЁ0-9_-]{3,30}$')
 
         if old_pass and not (new_pass and new_pass2):
             raise ValidationError(_('Введите и повторите новый пароль '))
@@ -66,8 +66,8 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
                 raise ValidationError(_(result))
 
         if username and not username_validator.fullmatch(username):
-            raise ValidationError('Имя пользователя должно быть 3-20 символов и '
-                                  'содержать в себе только буквы латинского алфавита, а также символы _-')
+            raise ValidationError('Имя пользователя должно быть 3-30 символов и '
+                                  'содержать в себе только буквы латинского и русского алфавита, а также символы _-')
 
         return data
 
@@ -97,4 +97,5 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('avatar', 'old_password', 'new_password', 'new_password2', 'unlink_vk')
+        fields = ('avatar', 'old_password', 'new_password', 'new_password2', 'unlink_vk',
+                  'bio', 'title', 'display_name',)

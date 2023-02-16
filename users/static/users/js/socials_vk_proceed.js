@@ -43,6 +43,8 @@ function process_login() {
         response = get_response(response);
 
         setCookie('token', response.content.token, 365);
+        setCookie("user_id", response.content.profile.user.id, 365);
+        
         if (!is_typed){
             window.location.replace(redirect_after);
         } else {
