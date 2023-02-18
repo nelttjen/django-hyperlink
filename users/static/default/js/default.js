@@ -1,6 +1,6 @@
 const DOMAIN = 'http://127.0.0.1:8000';
 const ENDPOINT = 'http://127.0.0.1:8000/api/v1';
-const AUTH_TYPE = 'Token';
+const AUTH_TYPE = 'Bearer';
 const VK_APP_ID = 51547215;
 
 function getCookie(cname) {
@@ -40,7 +40,7 @@ function get_response(response) {
 }
 
 function get_auth() {
-    let token = getCookie("Token");
+    let token = getCookie("token");
     
     let headers = token ? {"Authorization": `${AUTH_TYPE} ${token}`} : {}
     return headers;

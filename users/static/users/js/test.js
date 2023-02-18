@@ -1,5 +1,10 @@
 function on_submit(sender) {
-    let token = getCookie("Token");
+    headers = {
+        "Authorization": get_auth()['Authorization'],
+        "Cookie": ''
+    }
+    console.log(get_auth());
+    console.log(headers);
     $.ajax({
         type: "POST",
         url: `${ENDPOINT}/users/test/`,

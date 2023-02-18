@@ -82,12 +82,9 @@ class LinkCreateView(CreateAPIView, UpdateAPIView):
             if key in exclude:
                 request.data.pop(key)
 
-        # request.data['share_code'] = self._random_code()
-        request.data['share_code'] = 'test'
+        request.data['share_code'] = self._random_code()
 
-        def none_int(x): return int(x) if x is not None else None
-
-        if (valid := none_int(request.data.get('valid_until', 7))) not in (1, 7, 30, -1):
+        if (valid := int(request.data.get('valid_until', 7))) not in (1, 7, 30, -1):
             from django.utils.translation import gettext_lazy as _
             raise ParseError(_('Ссылка должна быть действительна в течении  1, 7 или 30 дней или быть бессрочной'))
 

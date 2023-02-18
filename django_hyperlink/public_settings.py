@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 
-    'django_hyperlink.middleware.OAuth2TokenMiddleware',
+    # 'django_hyperlink.middleware.OAuth2TokenMiddleware',
     'django_hyperlink.middleware.CheckAuthMiddleware',
 
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -193,7 +193,7 @@ SWAGGER_SETTINGS = {
         },
         'Token': {
             'type': 'apiKey',
-            'name': 'Authorization: Token <token>',
+            'name': 'Authorization: Bearer <token>',
             'in': 'header'
         }
     }
@@ -209,16 +209,30 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8000',
 ]
 
+# Caching
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}',
+        'OPTIONS': {
+            'db': '2',
+        }
+    }
+}
+
 # AWS
+STORAGE_BUCKET_NAME = 'django-hyperlink'
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
-AWS_STORAGE_BUCKET_NAME = 'dj-hyperlink-bucket'
-AWS_S3_CUSTOM_DOMAIN = '%s.s3.eu-central-1.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_CUSTOM_DOMAIN = '%s.storage.yandexcloud.net' % STORAGE_BUCKET_NAME
+AWS_S3_ENDPOINT_URL = 'https://storage.yandexcloud.net/'
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
+AWS_S3_REGION_NAME = 'storage'
 AWS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
 }
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+MEDIA_URL = f'/media/'
+AWS_QUERYSTRING_AUTH = True
 DEFAULT_FILE_STORAGE = 'django_hyperlink.modules.storage.MediaStorage'

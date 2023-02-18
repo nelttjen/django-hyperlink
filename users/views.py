@@ -42,6 +42,7 @@ def logout(request):
             logout_user(request)
     response = redirect(reverse('users-login') + '?message=Вы вышли с аккаунта')
     response.delete_cookie('token')
+    response.delete_cookie('user_id')
     return response
 
 
@@ -51,3 +52,7 @@ def socials(request):
 
 def socials_vk(request):
     return render(request, 'users/socials_vk_proceed.html')
+
+
+def profile(request):
+    return render(request, 'users/profile.html')

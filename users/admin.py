@@ -15,6 +15,7 @@ class ActivateCodeAdmin(admin.ModelAdmin):
 @admin.register(Profile)
 class CustomUserAdmin(admin.ModelAdmin):
 	readonly_fields = ('user',)
+	list_select_related = ('user', )
 	# pass
 
 

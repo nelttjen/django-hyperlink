@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load my_tags %}
+{% block head %}
+    <script src="{% static "users/js/profile.js" %}?reload={% random_int 1 999999 %}"></script>
+{% endblock %}
+{% block container %}
+    <div class="profile-card">
+
+    </div>
+
+{% endblock %}

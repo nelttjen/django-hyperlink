@@ -5,27 +5,40 @@ from rest_framework.exceptions import ParseError
 from rest_framework import permissions
 
 from django_hyperlink.serializers.default import DefaultSerializer
-from users.modules import SocialAuth as AuthProvider, Auth
-from users.models import SocialStateCodes
+from users.serializers.profile import CurrentUserProfileSerializer
+from users.modules import SocialAuth as AuthProvider, Auth, get_ip
+from users.models import SocialStateCodes, Profile
+
+
+def create_state(request):
+    state = request.data.get('state')
+    ip = get_ip(request)
+
+    if state:
+        state = SocialStateCodes(
+            state=state,
+            ip=ip
+        )
+        state.set_expire()
+        state.save()
+
+
+def confirm_state(request):
+    state = request.data.get('state')
+    ip = get_ip(request)
+
+    state = SocialStateCodes.objects.filter(state=state, ip=ip).first()
+    if not state or state.is_expired():
+        state.delete() if state else None
+        raise ParseError(_('Сессия истекла, войдите заного'))
+    state.delete()
 
 
 class SocialAuthView(APIView):
     permission_classes = (permissions.AllowAny, )
 
-    def _get_request_source(self, request):
-        return request.META.get('HTTP_CF_CONNECTING_IP') or \
-               request.META.get('REMOTE_HOST') or \
-               request.META.get('REMOTE_ADDR')
-
     def post(self, request):
-        state = request.data.get('state')
-        ip = self._get_request_source(request)
-
-        state = SocialStateCodes.objects.filter(state=state, ip=ip).first()
-        if not state or state.is_expired():
-            state.delete() if state else None
-            raise ParseError(_('Сессия истекла, войдите заного'))
-        state.delete()
+        confirm_state(request)
 
         result = AuthProvider(request).authenticate()
         if isinstance(result, str):
@@ -43,18 +56,47 @@ class SocialAuthView(APIView):
 
         token = Auth(user, request).authenticate()
 
-        return Response(DefaultSerializer({'content': {'token': token, 'username': user.username}}).data)
+        return Response(DefaultSerializer(
+            {'content': {'token': token, 'profile': CurrentUserProfileSerializer(user.profile).data}}
+        ).data)
 
     def put(self, request):
-        state = request.data.get('state')
-        ip = self._get_request_source(request)
+        create_state(request)
+        return Response(DefaultSerializer({'msg': 'ok'}).data)
 
-        if state:
-            state = SocialStateCodes(
-                state=state,
-                ip=ip
-            )
-            state.set_expire()
-            state.save()
 
+class SocialUpdateView(APIView):
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def post(self, request):
+        confirm_state(request)
+
+        result = AuthProvider(request).authenticate()
+        if isinstance(result, str):
+            raise ParseError(_(result))
+
+        user, data = result
+
+        if user:
+            raise ParseError(_('Этот вк уже привязан к другому профилю'))
+
+        provider = request.data.get('provider')
+
+        update = {AuthProvider.PROVIDERS[provider]: data[AuthProvider.PROVIDERS[provider]]}
+
+        Profile.objects.filter(user_id=request.user.id).update(**update)
+        return Response(DefaultSerializer({'content': update}).data)
+
+    def put(self, request):
+        create_state(request)
+        return Response(DefaultSerializer({'msg': 'ok'}).data)
+
+    def delete(self, request):
+        provider = request.data.get('provider')
+        if provider not in AuthProvider.PROVIDERS:
+            raise ParseError(_('Такого провайдера нет'))
+
+        Profile.objects.filter(user_id=request.user.id).update(
+            **{AuthProvider.PROVIDERS[provider]: None}
+        )
         return Response(DefaultSerializer({'msg': 'ok'}).data)
