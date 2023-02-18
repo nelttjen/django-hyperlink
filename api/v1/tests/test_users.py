@@ -433,7 +433,7 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         token = AccessToken.objects.filter(user_id=user.id).first()
 
         self.assertEqual(response.json()['content']['token'], token.token)
-        self.assertEqual(response.json()['content']['username'], user.username)
+        self.assertEqual(response.json()['content']['user']['username'], user.username)
 
     def test_user_login_by_email(self):
         mail = 'login@test.com'
@@ -457,7 +457,7 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         token = AccessToken.objects.filter(user_id=user.id).first()
 
         self.assertEqual(response.json()['content']['token'], token.token)
-        self.assertEqual(response.json()['content']['username'], user.username)
+        self.assertEqual(response.json()['content']['user']['username'], user.username)
 
     def test_user_login_banned(self):
         usr = 'login'
@@ -497,7 +497,7 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         response = client.post(url, data=data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['content']['token'])
-        self.assertEqual(response.json()['content']['username'], user.username)
+        self.assertEqual(response.json()['content']['user']['username'], user.username)
 
     def test_users_login_ban_expired(self):
         usr = 'login'
@@ -520,7 +520,7 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         response = client.post(url, data=data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['content']['token'])
-        self.assertEqual(response.json()['content']['username'], user.username)
+        self.assertEqual(response.json()['content']['user']['username'], user.username)
 
         updated = CustomUser.objects.get(pk=custom_user.id)
         self.assertFalse(updated.ban['is_banned'])
@@ -643,7 +643,7 @@ class TestUsersCorrectWork(TestCase, TestItemsBase):
         self.assertEqual(response_login.status_code, 200)
         self.assertTrue(changed_user.check_password(new_pass))
         self.assertFalse(changed_user.check_password('common_user'))
-        self.assertEqual(response_login.json()['content']['username'], user.username)
+        self.assertEqual(response_login.json()['content']['user']['username'], user.username)
 
     def test_users_recovery_put_code_used(self):
         user = self.common_user

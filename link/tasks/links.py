@@ -1,5 +1,6 @@
 from django.db.models import F, Q
 
+from celery import shared_task
 from django_hyperlink.celery import celery_app
 from link.models import ShareLink, LinkRedirect
 from users.models import Profile
@@ -53,3 +54,11 @@ def update_link_redirects(link_id, user_id, ip=None, is_unique=False):
             ip_address=ip,
         )
 
+
+@shared_task
+def daily_refresh(*args):
+    Profile.objects.filter(Q(daily_redirects__gt=0) | Q(daily_redirected__gt=0)).update(
+        daily_redirects=0,
+        daily_redirected=0
+    )
+    Profile.objects.bulk_update()

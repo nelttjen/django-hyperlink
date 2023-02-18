@@ -80,16 +80,23 @@ class SocialUpdateView(APIView):
         if user:
             raise ParseError(_('Этот вк уже привязан к другому профилю'))
 
-        fields = {
-            'vk': 'vk_id'
-        }
         provider = request.data.get('provider')
 
-        update = {fields[provider]: data[fields[provider]]}
+        update = {AuthProvider.PROVIDERS[provider]: data[AuthProvider.PROVIDERS[provider]]}
 
         Profile.objects.filter(user_id=request.user.id).update(**update)
         return Response(DefaultSerializer({'content': update}).data)
 
     def put(self, request):
         create_state(request)
+        return Response(DefaultSerializer({'msg': 'ok'}).data)
+
+    def delete(self, request):
+        provider = request.data.get('provider')
+        if provider not in AuthProvider.PROVIDERS:
+            raise ParseError(_('Такого провайдера нет'))
+
+        Profile.objects.filter(user_id=request.user.id).update(
+            **{AuthProvider.PROVIDERS[provider]: None}
+        )
         return Response(DefaultSerializer({'msg': 'ok'}).data)

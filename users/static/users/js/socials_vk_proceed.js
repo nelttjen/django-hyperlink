@@ -41,11 +41,10 @@ function process_login() {
     })
     .done((response) => {
         response = get_response(response);
-
-        setCookie('token', response.content.token, 365);
-        setCookie("user_id", response.content.profile.user.id, 365);
         
         if (!is_typed){
+            setCookie('token', response.content.token, 365);
+            setCookie("user_id", response.content.profile.user.id, 365);
             window.location.replace(redirect_after);
         } else {
             window.location.replace(DOMAIN + '/users/profile/')

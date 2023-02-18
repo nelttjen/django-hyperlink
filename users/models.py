@@ -42,8 +42,8 @@ class Profile(models.Model):
     bio = models.TextField(verbose_name='О себе', blank=True)
 
     # moderation
-    last_seen = models.DateTimeField(verbose_name='Последний раз в сети')
-    last_ip = models.GenericIPAddressField(verbose_name='Последний IP адрес')
+    last_seen = models.DateTimeField(verbose_name='Последний раз в сети', auto_now_add=True)
+    last_ip = models.GenericIPAddressField(verbose_name='Последний IP адрес', default='127.0.0.1')
     ban = models.JSONField(verbose_name='Информация о бане', default=user_ban_json)
 
     # socials
@@ -216,5 +216,5 @@ class SocialStateCodes(models.Model):
 @receiver(signal=models.signals.post_save, sender=DjangoUser)
 def user_created(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance, display_name=instance.username)
+        Profile.objects.create(user=instance, display_name=instance.username, last_ip='127.0.0.1')
     instance.profile.save()

@@ -1,4 +1,5 @@
 import base64
+import re
 
 from django.core.files.base import ContentFile
 from django.utils.translation import gettext_lazy as _
@@ -47,6 +48,7 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
     new_password = serializers.CharField(max_length=999)
     new_password2 = serializers.CharField(max_length=999)
     unlink_vk = serializers.CharField(max_length=999)
+    email = serializers.CharField(max_length=150)
 
     def validate(self, data):
         old_pass = data.get('old_password')
@@ -75,14 +77,28 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
         old_pass = data.get('old_password')
         new_pass = data.get('new_password')
 
+        update_fields = []
+
         if old_pass and new_pass:
             if instance.user.check_password(old_pass):
                 instance.user.set_password(new_pass)
-                instance.user.save(update_fields=['password', ])
+                update_fields.append('password')
+
                 del data['old_password']
                 del data['new_password']
             else:
                 raise ValidationError(_('Старый пароль введен неверно'))
+
+        if mail := data.get('email'):
+            instance.user.email = mail
+            mail_regex = re.compile(r'[^@]+@[^@]+\.[^@]+')
+            if not mail_regex.match(mail):
+                raise ValidationError(_('Email указан неверно'))
+
+            update_fields.append('email')
+
+        if update_fields:
+            instance.user.save(update_fields=update_fields)
 
         if data.get('avatar'):
             __, imgstr = data.get('avatar').split(';base64,')
@@ -98,4 +114,4 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ('avatar', 'old_password', 'new_password', 'new_password2', 'unlink_vk',
-                  'bio', 'title', 'display_name',)
+                  'bio', 'title', 'display_name', 'email')
