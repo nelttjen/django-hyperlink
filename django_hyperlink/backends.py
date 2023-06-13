@@ -28,6 +28,7 @@ class APIAuth(BaseAuthentication):
             return None
 
         if access_token.is_expired():
+            access_token.delete()
             return None
 
         user = access_token.user
@@ -92,6 +93,6 @@ def update_last_seen(user):
     except:
         pass
     else:
-        Profile.objects.filter(id=profile_id).select_for_update().update(
+        Profile.objects.filter(id=profile_id).update(
             last_seen=timezone.now()
         )

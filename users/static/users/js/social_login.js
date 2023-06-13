@@ -1,4 +1,4 @@
-const providers = ["vk", ]
+const providers = ["vk", "tg"]
 
 // https://oauth.vk.com/authorize?client_id=51547215&redirect_uri=http://127.0.0.1:8000/users/login/socials/vk/process/&scope=email&response_type=code&state=test
 
@@ -42,14 +42,19 @@ function reidrect_to_auth() {
             endp = `${ENDPOINT}/users/link_socials/`;
             headers = get_auth();
         }
-        
+
         $.ajax({
             type: "PUT",
             url: endp,
             headers: headers,
             data: {state},
+        }).done((resp) => {
+            window.location.replace(link);
+        }).fail((resp) => {
+            if (resp.status === 401) {
+                window.location.replace(`${DOMAIN}/users/login/`)
+            }
         });
-        window.location.replace(link);
     }
 }
 

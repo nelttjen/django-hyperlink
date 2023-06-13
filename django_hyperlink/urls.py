@@ -2,12 +2,14 @@ from django.contrib import admin
 from django.http import HttpResponsePermanentRedirect
 from django.urls import path, include, re_path
 from django_hyperlink.settings import API_PATH, API_FOLDER, DEBUG
+from rest_framework.schemas import get_schema_view
 
 
 urlpatterns = [
     path('admin/login/', lambda x: HttpResponsePermanentRedirect('/users/login/?next=/admin')),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
+    path('schema/', get_schema_view()),
 
     path('', include('link.urls')),
 

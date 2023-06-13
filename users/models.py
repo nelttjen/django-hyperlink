@@ -47,7 +47,8 @@ class Profile(models.Model):
     ban = models.JSONField(verbose_name='Информация о бане', default=user_ban_json)
 
     # socials
-    vk_id = models.BigIntegerField(verbose_name='Привязаный вк', null=True, blank=True, default=None, unique=True, db_index=True)
+    vk_id = models.BigIntegerField(verbose_name='Привязанный вк', null=True, blank=True, default=None, unique=True, db_index=True)
+    tg_id = models.BigIntegerField(verbose_name='Привязанный тг', null=True, blank=True, default=None, unique=True, db_index=True)
 
     # statistics
     total_redirects = models.PositiveIntegerField(verbose_name='Кол-во переходов по ссылкам', default=0)

@@ -31,7 +31,7 @@ class CurrentUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['user', 'display_name', 'avatar', 'title', 'bio', 'last_seen', 'rewards',
-                  'vk_id', 'total_redirects', 'total_redirected', 'daily_redirects', 'daily_redirected']
+                  'vk_id', 'tg_id', 'total_redirects', 'total_redirected', 'daily_redirects', 'daily_redirected']
 
 
 class UserModeratorProfileSerializer(serializers.ModelSerializer):

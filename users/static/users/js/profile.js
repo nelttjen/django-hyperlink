@@ -1,4 +1,16 @@
-let vk_action_link = `<a href="/users/login/socials/?provider=vk&link=1" class="btn btn-primary">Привязать</a>`
+function getButton(item, provider, onlyLink) {
+    let btn;
+    if (onlyLink) {
+        return `<a href="/users/login/socials/?provider=${provider}&link=1" class="btn btn-primary">Привязать</a>`;
+    }
+
+    if (item) {
+        btn = `<span id="social-${provider}-action"><button id="social-remove-${provider}" class="btn btn-primary">Удалить привязку</button></span>`;
+    } else {
+        btn = `<span id="social-${provider}-action"><a href="/users/login/socials/?provider=${provider}&link=1" class="btn btn-primary">Привязать</a></span>`;
+    }
+    return btn
+}
 
 function onload() {
     let user_id = getCookie('user_id');
@@ -12,14 +24,11 @@ function onload() {
         headers: get_auth()
     }).done((response) => {
         response = get_response(response);
-        let social_btn, rewards;
+        let vk_btn, tg_btn, rewards;
 
-        if (response.content.vk_id) {
-            social_btn = `<span id="social-vk-action"><button id="social-remove-vk" class="btn btn-primary">Удалить привязку</button></span>`
-        } else {
+        vk_btn = getButton(response.content.vk_id, 'vk', false)
+        tg_btn = getButton(response.content.tg_id, 'tg', false)
 
-            social_btn = '<span id="social-vk-action">`<a href="/users/login/socials/?provider=vk&link=1" class="btn btn-primary">Привязать</a>`</span>'
-        }
         if (response.content.rewards.length > 0){
             rewards = `<div class="reward">rewards here</div>`
         } else {
@@ -49,8 +58,12 @@ function onload() {
         <br><br>
         <div class="socials">
             <div class="social" style="border: 1px solid blue; padding: 5px">
-                <p>Vk id: <span id="vk-id">${response.content.vk_id}</span></p>
-                ${social_btn}
+                <p>Vk id: <span id="vk-id">${response.content.vk_id ? response.content.vk_id : "Не привязан"}</span></p>
+                ${vk_btn}
+            </div>
+            <div class="social" style="border: 1px solid blue; padding: 5px">
+                <p>Telegram id: <span id="tg-id">${response.content.tg_id ? response.content.tg_id : "Не привязан"}</span></p>
+                ${tg_btn}
             </div>
         </div>
         
@@ -79,6 +92,9 @@ function onload() {
         <button class="btn btn-primary" id="pass-save">Обновить пароль</button>
         <style>p.err{color: red;} p.succ{color: green;}</style>
         <p class="err" id="pass-info"></p>
+        </div>
+        <div class="logout">
+        <a href="/users/logout/" class="btn btn-danger mt-5">Выйти с аккаунта</a>
         </div>
         `
 
@@ -168,7 +184,11 @@ function save_profile() {
 function buttons() {
     $('#social-remove-vk').click((e) => {
         e.preventDefault();
-        remove_vk();
+        remove_social("vk");
+    });
+    $('#social-remove-tg').click((e) => {
+        e.preventDefault();
+        remove_social("tg");
     });
     $('#avatar-save').click((e) => {
         e.preventDefault();
@@ -184,17 +204,19 @@ function buttons() {
     });
 }
 
-function remove_vk() {
+function remove_social(social) {
 
     $.ajax({
         method: 'DELETE',
         url: `${ENDPOINT}/users/link_socials/`,
         headers: get_auth(),
-        data: {"provider": "vk"}
+        data: {"provider": social}
     }).done((response) => {
-        $("#vk-id").text('null');
+        $(`#${social}-id`).text('Не привязано');
 
-        $('#social-vk-action').html(vk_action_link);
+        let btn = getButton(null, social, true)
+
+        $(`#social-${social}-action`).html(btn);
     })
 }
 

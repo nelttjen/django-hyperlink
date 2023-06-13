@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'corsheaders',
     'storages',
-
+    'debug_toolbar',
     'oauth2_provider',
 
     # Apps
@@ -118,8 +118,8 @@ WSGI_APPLICATION = 'django_hyperlink.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': "postgres",
-        "USER": os.environ.get('POSTGRES_DB', 'postgres'),
+        'NAME': os.environ.get('POSTGRES_DB', 'postgres'),
+        "USER": os.environ.get('POSTGRES_USER', 'postgres'),
         "PASSWORD": os.environ.get('POSTGRES_PASSWORD', 'postgres'),
         "HOST": os.environ.get('POSTGRES_HOST', 'localhost'),
         "PORT": os.environ.get('POSTGRES_PORT', 5432)
@@ -236,3 +236,10 @@ AWS_HEADERS = {
 MEDIA_URL = f'/media/'
 AWS_QUERYSTRING_AUTH = True
 DEFAULT_FILE_STORAGE = 'django_hyperlink.modules.storage.MediaStorage'
+
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    BASE_DIR / 'link/static',
+    BASE_DIR / 'users/static',
+]

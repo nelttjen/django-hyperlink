@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponseRedirect as redirect
 from django.contrib.auth import logout as logout_user
@@ -12,10 +13,15 @@ def test(request):
 
 
 def login(request):
+    
+    if request.user.is_authenticated:
+        return redirect('/users/profile/')
+    
     message = request.GET.get('message', '')
-    vk_link = reverse('socials') + '?provider=vk'
+    next_link = ''
     if redirect_location := request.GET.get('next'):
-        vk_link += f'&next={redirect_location}'
+        next_link = f'&next={redirect_location}'
+    vk_link = reverse('socials') + '?provider=vk' + next_link
 
     return render(request, 'users/login.html', {'message': message, 'vk_link': vk_link})
 
@@ -47,6 +53,8 @@ def logout(request):
 
 
 def socials(request):
+    if request.GET.get('provider') == 'tg':
+        return render(request, 'users/telegram.html')
     return render(request, 'users/socials.html')
 
 
@@ -54,5 +62,6 @@ def socials_vk(request):
     return render(request, 'users/socials_vk_proceed.html')
 
 
+@login_required
 def profile(request):
     return render(request, 'users/profile.html')

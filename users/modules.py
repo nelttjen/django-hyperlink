@@ -1,4 +1,7 @@
 import datetime
+import hashlib
+import hmac
+import json
 import re
 
 import requests
@@ -9,7 +12,7 @@ from oauthlib.oauth2.rfc6749.tokens import random_token_generator
 from oauth2_provider.models import AccessToken, RefreshToken, Application
 
 from django_hyperlink.settings import DOMAIN, DEBUG, OAUTH2_DEFAULT_APP, OAUTH2_PROVIDER, \
-    SOCIAL_AUTH_VK_OAUTH2_KEY, SOCIAL_AUTH_VK_OAUTH2_SECRET
+    SOCIAL_AUTH_VK_OAUTH2_KEY, SOCIAL_AUTH_VK_OAUTH2_SECRET, TG_TOKEN
 from users.models import ActivateCode, Profile
 from users.tasks.user_code import send_activation_code
 
@@ -134,20 +137,25 @@ class Auth:
 
 class SocialAuth:
     PROVIDERS = {
-        'vk': 'vk_id'
+        'vk': 'vk_id',
+        'tg': 'tg_id',
     }
 
-    def __init__(self, request):
+    def __init__(self, request, skip_checks=False):
         self.code = request.data.get('code', None)
         self.provider = request.data.get('provider', None)
         self.redirect_to = request.data.get('redirect_to', f'{DOMAIN}/users/login/socials/{self.provider}/process/')
+        
+        self.skip_checks = skip_checks
+        self.request = request
 
         self.possible = {
             'vk': {'auth': self.vk_auth, 'user_field': 'vk_id'},
+            'tg': {'auth': self.tg_auth, 'user_field': 'tg_id'}
         }
 
     def vk_auth(self, code):
-        response = requests.get('https://oauth.vk.com/access_token', params={
+        response = requests.get('https://oauth.vk.com/access_token/', params={
             'client_id': SOCIAL_AUTH_VK_OAUTH2_KEY,
             'client_secret': SOCIAL_AUTH_VK_OAUTH2_SECRET,
             'code': code,
@@ -158,7 +166,6 @@ class SocialAuth:
         data = response.json()
 
         if error := data.get('error'):
-            # return error
             return False
 
         email = data.get('email')
@@ -187,9 +194,23 @@ class SocialAuth:
                 return False
 
         return {'vk_id': vk_id, 'username': email, 'email': email}
-
+    
+    def tg_auth(self, _):
+        data = self.request.data.get('tgdata', {})
+        data = json.loads(data)
+        data_check_string = [f"{k}={v}" for k, v in data.items() if k != "hash"]
+        data_check_string = "\n".join(sorted(data_check_string))
+        secret_key = hashlib.sha256(TG_TOKEN.encode()).digest()
+        built_hash = hmac.new(
+            secret_key, msg=data_check_string.encode(), digestmod=hashlib.sha256
+        ).hexdigest()
+        
+        if built_hash != data['hash']:
+            return False
+        return {'tg_id': data.get('id')}
+    
     def authenticate(self):
-        if not self.code or not self.provider:
+        if (not self.code or not self.provider) and self.provider != 'tg':
             return 'Данные не были получены, воспользуйтесь обычной формой авторизации'
 
         if self.provider not in self.possible.keys():

@@ -20,7 +20,7 @@ users_patterns = [
     path('users/test/', TestView.as_view(), name='api-users-test'),
     path('users/recovery/', RecoveryView.as_view(), name='api-users-recovery'),
 
-    path('users/<int:user_id>/', CurrentUserView.as_view(), name='api-users-profile')
+    path('users/<int:user_id>/', CurrentUserView.as_view(), name='api-users-profile'),
 ]
 
 urlpatterns = [

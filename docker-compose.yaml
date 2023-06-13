@@ -32,20 +32,20 @@ services:
     depends_on:
       - postgres_db
 
-  django-collectstatic:
-    build: .
-    volumes:
-      - .:/app/
-    image: docker-app:django
-    container_name: django-collectstatic
-    depends_on:
-      - postgres_db
-      - django-migrate
-    command:
-      - python
-      - manage.py
-      - collectstatic
-      - --noinput
+#  django-collectstatic:
+#    build: .
+#    volumes:
+#      - .:/app/
+#    image: docker-app:django
+#    container_name: django-collectstatic
+#    depends_on:
+#      - postgres_db
+#      - django-migrate
+#    command:
+#      - python
+#      - manage.py
+#      - collectstatic
+#      - --noinput
 
   # django app
   django:
@@ -53,7 +53,7 @@ services:
     volumes:
       - .:/app/
     ports:
-      - "8000:8000"
+      - "80:8000"
     image: docker-app:django
     container_name: django
     depends_on:
@@ -92,18 +92,6 @@ services:
       - ./django_hyperlink/.env
     depends_on:
       - postgres_db
-
-  # just to say all is ready
-  done:
-    image: docker
-    command: sh -c "sleep 5s && echo done"
-    depends_on:
-      - postgres_db
-      - django-migrate
-      - django
-      - redis
-      - celery
-      - pgadmin
 
 volumes:
   pgdata:
